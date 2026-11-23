@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Audis Lab</title>
+<style>:root{color-scheme:light;box-sizing:border-box}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fbfcfb;color:#303631}img{max-width:100%}[hidden]{display:none!important}.boot{font:15px/1.5 Arial,Helvetica,sans-serif;color:#7c827d;padding:32px 20px}</style>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="root"><p class="boot">Carregando o Audis…</p></div>
+<script src="armazem.js"></script>
+<script>
+// Modo GitHub Pages: os dados ficam no navegador deste aparelho (veja pages/sw.js).
+// O app só é carregado depois que o service worker assume a página, porque é ele que responde pelo banco.
+(async () => {
+  const aviso = t => { const p = document.querySelector(".boot"); if (p) p.textContent = t; };
+  if (!("serviceWorker" in navigator) || !window.indexedDB)
+    return aviso("Este navegador não deixa guardar os dados no aparelho. Abra numa aba normal (fora do modo privado).");
+  try {
+    await navigator.serviceWorker.register("sw.js");
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller)
+      await new Promise(ok => { navigator.serviceWorker.addEventListener("controllerchange", ok, { once: true }); setTimeout(ok, 4000); });
+    if (!navigator.serviceWorker.controller) {
+      if (sessionStorage.getItem("audis:sw-recarga")) return aviso("Não foi possível preparar o armazenamento neste navegador. Recarregue a página.");
+      sessionStorage.setItem("audis:sw-recarga", "1");
+      return location.reload();
+    }
+    sessionStorage.removeItem("audis:sw-recarga");
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    if (!(await AudisArmazem.temDados()) && !localStorage.getItem("audis:comecar-vazio")) return location.replace("dados.html");
+    for (const src of ["claude-shim.js", "app.js"])
+      await new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => no(new Error("falha ao carregar " + src)); document.body.appendChild(s); });
+  } catch (e) {
+    aviso("Não foi possível abrir o Audis: " + ((e && e.message) || e));
+  }
+})();
+</script>
+</body>
+</html>

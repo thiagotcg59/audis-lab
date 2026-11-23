@@ -3,3 +3,6 @@ dist/
 .env
 # Seus dados pessoais de estudo (acervo, erros, imagens). Não publique em repositório público.
 dados/
+site/
+pacotes/
+dados-*/

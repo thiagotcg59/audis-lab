@@ -99,6 +99,19 @@ Pontos de atenção:
 - `dados/` e `.env` estão no `.gitignore`. São dados pessoais de estudo; não suba para repositório público.
 - No modo local, as preferências de tela (filtros, sessão de flashcards do dia) ficam no `localStorage` do navegador em `127.0.0.1:5173`, separadas das do claude.ai.
 
+## Abrir pelo GitHub Pages (celular)
+
+A cada envio para a `main`, o GitHub publica o app em https://thiagotcg59.github.io/audis-lab/ (`.github/workflows/pages.yml`).
+
+Lá não existe servidor. Os arquivos de `pages/` fazem o papel dele dentro do navegador: `sw.js` responde aos mesmos pedidos que `dev/server.mjs` e guarda tudo no IndexedDB do aparelho (`armazem.js`). O app e o simulador `dev/claude-shim.js` são os mesmos.
+
+- **Os dados não vão para o GitHub.** Leve-os num pacote: `npm run dados:empacotar` gera `pacotes/audis-dados-AAAA-MM-DD.json.gz`; no celular, abra `…/audis-lab/dados.html` e carregue o arquivo.
+- **Cada aparelho tem a sua cópia.** Nada se sincroniza com o computador nem com o claude.ai.
+- **Faça cópias.** Se o navegador limpar os dados do site, o estudo feito ali se perde. Em `dados.html`, "Baixar cópia dos dados" gera um pacote igual.
+- **Trazer de volta ao computador:** `node scripts/empacotar-dados.mjs --abrir <pacote> dados-do-celular` cria uma pasta nova (nunca escreve por cima); confira com `AUDIS_DADOS=dados-do-celular npm run dev`.
+- **Sem IA:** não há onde guardar uma chave com segurança numa página pública, então os recursos com IA ficam escondidos.
+- Para testar antes de enviar: `npm run build:pages` gera `site/`.
+
 ## Publicar de volta no claude.ai
 
 O artefato continua no ar e pode receber novas versões:

@@ -1,0 +1,42 @@
+name: Publicar no GitHub Pages
+
+# Monta a versão que roda no navegador (dados guardados no aparelho, sem servidor)
+# e publica em https://thiagotcg59.github.io/audis-lab/ a cada atualização da main.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  montar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Só o esbuild é necessário para minificar; o Playwright do package.json fica de fora.
+      - run: npm install --no-save esbuild@0.24
+      - run: node scripts/build-pages.mjs
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  publicar:
+    needs: montar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
+    steps:
+      - id: publicacao
+        uses: actions/deploy-pages@v4

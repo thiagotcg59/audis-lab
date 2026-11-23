@@ -10,7 +10,9 @@
     "build:min": "node scripts/build.mjs --minify",
     "check": "node scripts/build.mjs && node --check dist/app.js",
     "test:smoke": "node testes/smoke.mjs",
-    "preview": "node scripts/build.mjs --minify && node dev/server.mjs --dist"
+    "preview": "node scripts/build.mjs --minify && node dev/server.mjs --dist",
+    "build:pages": "node scripts/build-pages.mjs",
+    "dados:empacotar": "node scripts/empacotar-dados.mjs"
   },
   "engines": {
     "node": ">=20"
