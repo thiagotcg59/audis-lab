@@ -1,0 +1,205 @@
+# Arquitetura do Audis Lab
+
+Este documento descreve o código como ele está neste projeto. Os nomes curtos (`W`, `re`, `ot`…) vêm do compilador e são os nomes reais no código; a tabela mais abaixo traduz os principais.
+
+## Visão geral
+
+- App de página única em React 18, sem servidor próprio. Roda dentro de um artefato do claude.ai.
+- Navegação por *hash*: `#/material?topico=...`. A rota é o caminho; os parâmetros vêm depois de `?`.
+- Todo acesso externo passa por `window.claude.use(nome)`, entregue pelo claude.ai:
+  - `db`: banco de documentos JSON (limite de 256 KiB por documento).
+  - `sample`: chamadas ao Claude, com a conta de quem está usando.
+  - `assets`: arquivos enviados (imagens do Quadro), servidos em `/_blob/<id>`.
+  - `downloads`: salvar um arquivo no aparelho (cópia do acervo).
+- No modo local, `dev/claude-shim.js` implementa essas quatro capacidades sobre `dev/server.mjs`.
+
+## Como o código é montado
+
+`scripts/build.mjs` concatena, nesta ordem:
+
+1. `src/00-vendor.js`
+2. `src/10-nucleo-1.js`
+3. `src/modulos/*.js` em ordem alfabética
+4. `src/90-nucleo-2.js`
+
+O resultado é **um único arquivo dentro de uma função** (`(() => { ... })()`), aberta em `00-vendor.js` e fechada em `90-nucleo-2.js`. Consequências:
+
+- Nenhum arquivo de `src/` funciona sozinho. Não há `import` nem `export`.
+- Tudo compartilha o mesmo escopo. Um módulo usa funções do núcleo pelo nome, e o núcleo usa componentes dos módulos (as rotas em `90-nucleo-2.js` apontam para `__RXW`, `__FC`, `__CQ`…).
+- Declarações `function` valem no arquivo todo. Já `var x = ...` só tem valor depois da linha em que aparece, então a ordem dos arquivos importa para constantes.
+- Cada arquivo contém declarações inteiras, mas nenhum abre ou fecha a função sozinho. Depois de renomear, criar ou reordenar arquivos, confira com `npm run check`.
+
+## O que há em cada arquivo do núcleo
+
+`src/10-nucleo-1.js` (as posições são aproximadas e mudam conforme o arquivo é editado; procure pelo nome):
+
+| Trecho | Conteúdo |
+|---|---|
+| início | utilitários de texto e data (`Z`, `Ae`, `ot`), missões (`mo`, `Js`), árvore do material (`Zb`, `Ee`) |
+| `al = class` | **o serviço**: todas as operações sobre o acervo (lista abaixo) |
+| depois do serviço até `Jr = class` | biblioteca de validação de esquemas (zod) e o esquema do acervo (`pB`) |
+| `ih = class` | armazenamento por HTTP de uma versão antiga com servidor e login. **Não é usado** |
+| `sh = class` | **armazenamento em uso**: grava o acervo no `db` do artefato, em páginas |
+| `fh = class`, `JD`, `W` | montagem do pedido de análise para colar numa conversa com o Claude (`fh`) e o provedor React que entrega `{ state, service }` (`JD`, lido com `W`) |
+| ícones (`G("...")`), `rO` | ícones e a moldura do app: barra lateral, itens de menu, topo |
+| `MC` | tela Missões do dia |
+| `ZB`, `kO`, `$O` | análise de questão colada: ferramentas dadas ao Claude, chamada e validação |
+| `ZC` | tela Hoje |
+| `OO`, `DO`, `MO`, `e0`, `tM`, `VO`, `ZO` | peças do Material: árvore, classificar seção, lixeira, texto com grifos, explicação e anotação de um grifo |
+
+`src/90-nucleo-2.js`:
+
+| Nome | Conteúdo |
+|---|---|
+| `t0` | tela Material (abas Completo, Revisão, Visual, Quadro) |
+| `a0` | tela Meus Erros (o caderno) |
+| `i0` | tela Professor |
+| `c0` | tela Desempenho |
+| `g0` | tela Adicionar / Trazer questão do TEC |
+| `h0` | tela de foco (`/foco`) |
+| `wM`, `C3` | tabela de rotas e o roteador; no fim, `createRoot(...).render(...)` |
+
+### Rotas
+
+| Rota | Componente | Observação |
+|---|---|---|
+| `/` | `ZC` | Hoje |
+| `/missoes` | `__PLW` | abas: Missões do dia (`MC`) e Plano da semana (`__PL`, com `?aba=semana`) |
+| `/material` | `t0` | `?topico=<id>`, `?subtema=<chave>`, `?trilha=1`, `?quadro=1` |
+| `/erros` | `__RXW` | abas: caderno (`a0`) e Raio-X (`__RX`, com `?aba=raiox`); `?treinar=<tipo>&n=<qtd>` abre o treino |
+| `/flashcards` | `__FC` | |
+| `/professor` | `i0` | `?questao=<id>` |
+| `/desempenho` | `c0` | |
+| `/conquistas` | `__CQ` | |
+| `/radar` | `__RDR` | |
+| `/adicionar` | `g0` | |
+| `/foco` | `h0` | fora da moldura normal |
+
+## Tradução dos nomes do núcleo
+
+| Nome | O que é |
+|---|---|
+| `W()` | *hook*: devolve `{ state, service }`. `state` é o acervo inteiro; `service` é o objeto com as operações |
+| `re` | componente de link interno: `h(re, { href: "/erros" }, "texto")` |
+| `Yr()` | *hook*: parâmetros da rota (`URLSearchParams`). Só pode ser chamado no corpo de um componente, nunca dentro de `useState(() => ...)` ou de um evento |
+| `gh()` | *hook*: caminho da rota atual |
+| `ka(nome)` | `await ka("db")`: pega uma capacidade do `window.claude`; devolve `null` se não houver |
+| `ot(data)` | dia local no formato `AAAA-MM-DD` |
+| `Z(texto)` | normaliza texto para comparar (minúsculas, sem acento) |
+| `Ae(questao)` | chave única de uma questão (`tec:<número>` nas questões do TEC) |
+| `Ee(secao)` | caminho de tema e subtema de uma seção do material |
+| `Zb(material)` | monta a árvore disciplina › tema › subtema |
+| `zn(n)` | faixa de cor da incidência de um grifo |
+| `mo(state)`, `Js(state)` | missões diárias e o progresso de hoje |
+| `XO(questoes)` | opções de banca para filtros |
+| `Za` | cabeçalho de página (`eyebrow`, `title`, `description`) |
+| `da` | janela modal |
+| `te` | mensagem de aviso ou erro (`<p class="notice">`) |
+| `k`, `Qa`, `V`, `mt`, `st`, `be`, `fe`, `K`, `B`, `S`, `L`, `ee`, `Ct`… | todos são o mesmo `react/jsx-runtime`. `(0, k.jsx)("div", {...})` é o JSX compilado |
+| `kt`, `zt`, `Tn`, `qo`, `Vi`, `Ha`, `ph`… | todos são o mesmo `React` (para `useState`, `useMemo`…) |
+| `__rdR` | o `React` usado pelos módulos; neles, `let h = __rdR.createElement` |
+
+### Operações do serviço (`service`)
+
+Consulta: `activeMaterial`, `section`, `question`, `performanceQuestions`, `statistics`, `sectionPerformance`, `topicPerformance`, `dueReviews`, `relatedErrors`, `relatedMaterial`, `searchMaterial`, `incidenceContext`, `previewIncidences`, `checkQuestionCode`, `context`.
+
+Questões e análises: `createIntake`, `receiveIntake`, `approveIntake`, `approveIntakeWithMaterial`, `rejectIntake`, `intakeMaterial`, `importResponse`, `addQuestion`, `recordAnswer`, `recordAnalysisSubmissions`, `answerFeedback`, `selectQuestion`, `setCurrentQuestion`, `openQuestionId`, `setQuestionUnderstanding`.
+
+Material: `propose`, `proposeManual`, `prepareProposal`, `proposal`, `reviewProposal`, `classifyMaterial`, `renameSubtopic`, `archiveMaterial`, `restoreMaterial`, `saveMaterialScene`, `saveSimpleSummary`, `saveThemePath`, `placeThemeStep`, `moveThemeStep`, `setThemeStepLevel`.
+
+Grifos: `setHighlightUnderstanding`, `setHighlightNote`, `saveHighlightNoteReview`, `saveHighlightExplanation`, `saveNote`.
+
+Erros: `addError`, `reviewError(id, lembrou, data)`, `setErrorUnderstanding`.
+
+Missões: `saveDailyMission`, `adjustMissionCount`, `completeMission`, `syncDailyCompletions`.
+
+## Dados
+
+### O acervo (`state`)
+
+| Campo | Conteúdo |
+|---|---|
+| `questions` | questões coladas: `id`, `number` (código no TEC), `subject`, `topic`, `subtopics`, `board`, `year`, `exam`, `statement`, `alternatives`, `correct`, `chosen`, `answeredCorrectly`, `commentary`, `date`, `sectionId`, `source` (`"tec-manual"` nas questões reais) |
+| `material` | seções do Material Único: `id`, `subject`, `topicPath`, `topic`, `title`, `text`, `version`, `concepts`, `highlights`, `deletedAt` |
+| `material[].highlights` | grifos: `phrase` (trecho literal do texto), `count`, `references` (questões que cobraram: `questionId`, `key`, `board`, `exam`, `evidence`, `explanation`), `understanding` (`understood`, `partial`, `not_understood` ou ausente), `note`, `noteReview` |
+| `errors` | caderno de erros: `id`, `questionId`, `questionSnapshot`, `concept`, `correctRule`, `probableCause`, `trap`, `memorizationPhrase`, `reviews` (`{ date, recalled }`) |
+| `responses` | análise do Claude por questão (objeto com chave = id da questão) |
+| `proposals` | propostas de mudança no material (`status`: `pending`…) |
+| `intakes` | fila de questões coladas (`status`: `waiting`, `review`, `rejected`, `approved`) |
+| `history` | registro de eventos |
+| `dailyMissions`, `missionLog`, `completedMissions` | missões diárias, ajustes manuais (+1/+5) e metas cumpridas |
+| `themePaths`, `notes`, `answerHistory`, `currentQuestionId` | trilhas de tema, anotações, histórico de respostas e questão atual |
+
+### Como o acervo é gravado
+
+A classe `sh` divide o acervo em **páginas** na coleção `pages`. Cada documento tem a forma:
+
+```json
+{ "collection": "errors", "records": { "[\"<id>\",0]": { "position": 0, "rev": 1793644772667, "value": { } } }, "updatedAt": "...", "writeId": "..." }
+```
+
+- O nome do documento é `<coleção>.<sufixo>` (por exemplo `errors.mutcihh32lh2o`). Uma coleção grande ocupa várias páginas, para respeitar o limite de 256 KiB.
+- A chave de cada registro é `["id", parte]` em JSON. Um registro grande pode ser partido em várias partes.
+- Antes de gravar, a classe escreve um diário em `journal/` e `meta/journal`, e pega uma trava em `meta/lock`, para não corromper o acervo se dois aparelhos salvarem ao mesmo tempo.
+
+### Outras coleções do banco
+
+| Coleção | Documentos | Quem usa |
+|---|---|---|
+| `fcards` | `srs` (agenda de cada card: `d` próxima data, `i` intervalo, `n` vezes, `r` resultado `u`/`p`/`n`, `t` quando), `q0`…`q7` (perguntas geradas pelo Claude) | Flashcards |
+| `rxerr` | `types` (tipo de cada erro: `t`, e o par `a`/`b` quando é confusão), `pairs` (quadros comparativos) | Raio-X |
+| `quadro` | um documento por imagem: `sid` (seção), `asset`, `title`, `o` (ordem), `q`/`qn`/`qb` (questão), `read` (leitura do Claude), `fc` (virou flashcard) | Quadro |
+| `quadroimg` | imagem em base64, só quando o envio de arquivos não está disponível | Quadro |
+| `plano` | `config` (minutos padrão por dia), `w-AAAA-MM-DD` (uma semana, pela segunda-feira): `mins`, `blocks`, `reasons`, `claude` | Plano da semana |
+
+### Preferências no navegador (`localStorage`)
+
+Chaves `magis:*` e `audis:*`: filtros de telas, modo e sessão do dia dos Flashcards (`magis:fc-ses`), cópias locais de `fcards`, `rxerr`, `quadro` e `plano` para abrir rápido, última seção aberta no Material. Nada disso é a fonte da verdade, exceto a sessão de flashcards do dia.
+
+## Os módulos
+
+Cada módulo usa um prefixo próprio. Funções com letra minúscula depois de `__` são lógica; com maiúscula, componentes React.
+
+| Arquivo | Prefixo | Conteúdo |
+|---|---|---|
+| `20-subtemas-auxiliares.js` | `__sb` | codificar a chave de um subtema para a URL e achar o nó na árvore |
+| `21-radar-da-banca-e-utilitarios.js` | `__rd` | `__rdR` (React), `__rdLS`/`__rdSS` (localStorage), `__rdHash`, `__rdPath`, `__rdData`; tela `__RDR` |
+| `22-entendimento-dos-grifos.js` | `__ut` | barra "Seu entendimento dos grifos" (`__UTB`) |
+| `23-conquistas.js` | `__cq` | tela `__CQ`: nível, territórios, flashcards, questões por subtema |
+| `24-flashcards.js` | `__fc` | `__fcCards` (monta os cards a partir dos grifos classificados), agenda, geração e correção pelo Claude; `__FCCard`, `__FC` |
+| `25-raio-x-dos-erros.js` | `__rx` | classificação dos erros (regras e Claude), pares confundidos, treino (`__RXTrain`), tela `__RX`, abas `__RXW` |
+| `26-quadro-do-topico.js` | `__qd` | guarda e lê imagens, leitura pelo Claude, mural e detalhe (`__QD`), alfinete na árvore (`__QDPin`) |
+| `27-plano-da-semana.js` | `__pl` | gerador do plano (`__plGen`), progresso automático (`__plProg`), ajuste pelo Claude, tela `__PL`, abas `__PLW`; no fim, `__rxAuto` (abre o treino do Raio-X pela URL) |
+| `28-material-unico-do-subtema.js` | `__SBV` | leitura de um subtema inteiro; é o único módulo escrito no estilo do compilador |
+
+Pontos em que o núcleo foi alterado para encaixar os módulos (procure pelo nome):
+
+- Rotas em `wM` (`90-nucleo-2.js`): `__PLW`, `__RXW`, `__RDR`, `__FC`, `__CQ`.
+- Menu lateral (`10-nucleo-1.js`): itens Flashcards, Conquistas e Radar, com os ícones `__fcIcon`, `__cqIcon`, `__rdIcon`, e o contador `__fcBadge`.
+- Tela Material (`t0`): aba "Quadro" (`__QDTab`, `__QD`), barra `__UTB`, botão "Material único do subtema" (`__sbOpen`, `__SBV`).
+- Árvore do material (`DO`): alfinete `__QDPin`.
+- Flashcards (`__fcCards`, `__FCCard`): cards vindos do Quadro (`__qdFcAdd`, `__QDFcBack`).
+
+## Chamadas ao Claude
+
+Todas usam `sample(...)` ou `sample.json(...)`, com `modelTier` `quick`, `default` ou `complex`.
+
+| Onde | Função | Nível |
+|---|---|---|
+| Analisar questão colada (com ferramentas `buscar_material`, `ler_secao`, `conferir_codigo`, `enviar_analise`) | `kO` | escolhido na tela |
+| Trilha de um tema | `AO` | `default`, com nova tentativa em `complex` se a resposta vier cortada |
+| Cena visual do material, explicação de um grifo, análise de anotação, resumo simples | `RO`, `jO`, `qO` e a função de resumo em `90-nucleo-2.js` | `default` ou `complex` |
+| Radar: agrupar pegadinhas | `__rdGroup` | `default` |
+| Flashcards: gerar perguntas / corrigir resposta | `__fcGen` / `__fcGrade` | `default` / `quick` |
+| Raio-X: classificar erros / quadro comparativo | `__rxClassify` / `__rxCompare` | `quick` / `default` |
+| Quadro: ler imagem e comparar com o material | `__qdRead` | `default`, com imagem |
+| Plano: ajustar por pedido em texto | `adjust` dentro de `__PL` | `default` |
+
+Os prompts tratam o texto do aluno e das questões como dado, pedem JSON e validam a resposta antes de salvar.
+
+## Cores usadas nos gráficos
+
+- Entendimento dos grifos: verde `#3d8b57`, âmbar `#c99a2e`, vermelho `#c4473a`, cinza hachurado para "sem marcação".
+- Consolidação dos flashcards (azuis): `#2b5c8a`, `#6f9fcf`, `#b3cde8`.
+- Questões: certas em violeta `#6250d6`, erradas em laranja `#eb6834`.
+- Blocos do plano: questões verde `#516a43`, erros laranja `#eb6834`, flashcards azul `#2b5c8a`, material âmbar `#c99a2e`, fechamento violeta `#6250d6`.

@@ -1,0 +1,22 @@
+{
+  "name": "audis-lab",
+  "version": "29.0.0",
+  "private": true,
+  "description": "Audis Lab: app de estudos para concursos (exportado do artefato do claude.ai, versão 29).",
+  "type": "module",
+  "scripts": {
+    "dev": "node dev/server.mjs",
+    "build": "node scripts/build.mjs",
+    "build:min": "node scripts/build.mjs --minify",
+    "check": "node scripts/build.mjs && node --check dist/app.js",
+    "test:smoke": "node testes/smoke.mjs",
+    "preview": "node scripts/build.mjs --minify && node dev/server.mjs --dist"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "playwright": "^1.48.0"
+  }
+}
