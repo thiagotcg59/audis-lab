@@ -41,6 +41,18 @@
     sessionStorage.removeItem("audis:sw-recarga");
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
     if (!(await AudisArmazem.temDados()) && !localStorage.getItem("audis:comecar-vazio")) return location.replace("dados.html");
+    // IA disponível no endereço, mas sem a senha neste aparelho: o link do rodapé avisa onde ligar.
+    (async () => {
+      try {
+        if (await AudisArmazem.lerAjuste("senha-ia")) return;
+        const r = await fetch("api/config", { cache: "no-store" });
+        if (r.ok && (await r.json()).ia === true) {
+          const a = document.querySelector(".rodape-dados a");
+          a.href = "dados.html#ia"; a.textContent = "A IA está desligada neste aparelho · toque aqui para digitar a senha";
+          a.style.cssText = "color:#8a3b2e;font-weight:600";
+        }
+      } catch {}
+    })();
     for (const src of ["claude-shim.js", "app.js"])
       await new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => no(new Error("falha ao carregar " + src)); document.body.appendChild(s); });
   } catch (e) {
