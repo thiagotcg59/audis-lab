@@ -69,6 +69,7 @@ O resultado é **um único arquivo dentro de uma função** (`(() => { ... })()`
 | `/erros` | `__RXW` | abas: caderno (`a0`) e Raio-X (`__RX`, com `?aba=raiox`); `?treinar=<tipo>&n=<qtd>` abre o treino |
 | `/flashcards` | `__FC` | |
 | `/mapas` | `__MP` | `?m=<id>` abre um mapa |
+| `/teoria` | `__TE` | `?m=<id do mapa>` abre o documento do assunto |
 | `/professor` | `i0` | `?questao=<id>` |
 | `/desempenho` | `c0` | |
 | `/conquistas` | `__CQ` | |
@@ -152,6 +153,7 @@ A classe `sh` divide o acervo em **páginas** na coleção `pages`. Cada documen
 | `quadro` | um documento por imagem: `sid` (seção), `asset`, `title`, `o` (ordem), `q`/`qn`/`qb` (questão), `read` (leitura do Claude), `fc` (virou flashcard) | Quadro |
 | `quadroimg` | imagem em base64, só quando o envio de arquivos não está disponível | Quadro |
 | `mapas` | um documento por mapa: `nome`, `disc`, `srs` (`s` degrau, `d` próxima data, `t` último treino, `r` % lembrado), `pags` (cada página: `id`, `asset` ou `dbimg`, `titulo`, `ramos[].itens[]` com `id`, `x` e as lacunas entre `{{ }}`, `m` selo; `mst` com a última resposta de cada lacuna, chave `<id do item>\|<nº>`). Cada ramo pode ter `subs` (chaves de nós da árvore do Material, as mesmas de `Zb`) e `sug` (sugestões do Claude ainda não confirmadas). O mapa pode ter `faltas` (`itens[]`: `rid`, `iid`, `sid` seção, `x` afirmação, `txt` parágrafo sugerido, `st` `p` proposta criada ou `x` dispensado). A imagem de uma página sem `asset` fica em `quadroimg/<id da página>` | Mapas |
+| `teoria` | um documento por mapa (mesmo id): `nome`, `sig` (retrato do mapa quando o texto foi escrito), `caps` (`rid` id do ramo, `t` título, `bl` blocos `{ k: "f" fonte | "c" complemento do Claude, x }`) |
 | `plano` | `config` (minutos padrão por dia), `w-AAAA-MM-DD` (uma semana, pela segunda-feira): `mins`, `blocks`, `reasons`, `claude` | Plano da semana |
 
 ### Preferências no navegador (`localStorage`)
@@ -174,6 +176,7 @@ Cada módulo usa um prefixo próprio. Funções com letra minúscula depois de `
 | `27-plano-da-semana.js` | `__pl` | gerador do plano (`__plGen`), progresso automático (`__plProg`), ajuste pelo Claude, tela `__PL`, abas `__PLW`; no fim, `__rxAuto` (abre o treino do Raio-X pela URL) |
 | `29-mapa-mental.js` | `__mp` | área Mapas: armazenamento próprio (`__mpStore`, `__mpPut`), leitura de uma página pelo Claude (`__mpReadPage`), lacunas (`__mpParts`, `__mpGaps`, `__mpBuild`), agenda (`__mpSched`), migração do que foi lido no Quadro (`__mpMigrate`); telas `__MP` (lista), `__MPMap` (um mapa), `__MPRamos` e `__MPItemEdit` (correção), `__MPStudy` (treino), `__MPBadge` (contador do menu). As imagens usam as funções do Quadro (`__qdPrep`, `__qdStoreImg`, `__qdSrc`) |
 | `30-mapas-e-material.js` | `__mp` | ligação dos ramos de um mapa com o Material: índice dos subtemas (`__mpIdx`, `__mpNodesFor`), espelho de questões e grifos (`__mpNodeStats`, `__mpRamoStats`), sugestão de subtemas (`__mpSuggest`) e comparação com o texto das seções (`__mpCompare`) pelo Claude; componentes `__MPSubs` (subtemas de um ramo), `__MPBanca` (Mapa × banca) e `__MPLink` (atalho no Material) |
+| `31-teoria.js` | `__te` | área Teoria: um documento por mapa, um capítulo por ramo. Armazenamento próprio (`__teStore`, `__tePut`), escrita pelo Claude em grupos de 4 ramos (`__teGerar`), aviso de desatualizada (`__teSig`), e "O que já caiu" lido do Material pelos subtemas do ramo (`__TECaiu`, usa `__mpRamoStats`) |
 | `28-material-unico-do-subtema.js` | `__SBV` | leitura de um subtema inteiro; é o único módulo escrito no estilo do compilador |
 
 Pontos em que o núcleo foi alterado para encaixar os módulos (procure pelo nome):
@@ -200,6 +203,7 @@ Todas usam `sample(...)` ou `sample.json(...)`, com `modelTier` `quick`, `defaul
 | Quadro: ler imagem e comparar com o material | `__qdRead` | `default`, com imagem |
 | Mapas: sugerir subtemas para os ramos / comparar o mapa com o Material | `__mpSuggest` / `__mpCompare` | `default` |
 | Mapas: transcrever a página em ramos e lacunas | `__mpReadPage` | `default`, com imagem |
+| Teoria: escrever os capítulos de um mapa | `__teGerar` | `default` |
 | Plano: ajustar por pedido em texto | `adjust` dentro de `__PL` | `default` |
 
 Os prompts tratam o texto do aluno e das questões como dado, pedem JSON e validam a resposta antes de salvar.

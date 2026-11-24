@@ -21943,6 +21943,20 @@ ${JSON.stringify(t, null, 2)}`;
     ["path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3", key: "mp4" }],
     ["path", { d: "M12 12V8", key: "mp5" }],
   ]);
+  var __teIcon = G("BookOpenText", [
+    ["path", { d: "M12 7v14", key: "te1" }],
+    ["path", { d: "M16 12h2", key: "te2" }],
+    ["path", { d: "M16 8h2", key: "te3" }],
+    [
+      "path",
+      {
+        d: "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z",
+        key: "te4",
+      },
+    ],
+    ["path", { d: "M6 12h2", key: "te5" }],
+    ["path", { d: "M6 8h2", key: "te6" }],
+  ]);
   var be = U(X()),
     tO = [
       { label: "Hoje", href: "/", icon: Ad },
@@ -21951,6 +21965,7 @@ ${JSON.stringify(t, null, 2)}`;
       { label: "Erros", href: "/erros", icon: _n },
       { label: "Flashcards", href: "/flashcards", icon: __fcIcon },
       { label: "Mapas", href: "/mapas", icon: __mpIcon },
+      { label: "Teoria", href: "/teoria", icon: __teIcon },
       { label: "Professor", href: "/professor", icon: Oo },
       { label: "Desempenho", href: "/desempenho", icon: vd },
       { label: "Conquistas", href: "/conquistas", icon: __cqIcon },

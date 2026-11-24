@@ -1140,6 +1140,7 @@
               " que faltaram",
             )
           : null,
+        h(re, { className: "qd-btn", href: "/teoria?m=" + encodeURIComponent(map.id) }, "Teoria do assunto"),
       ),
       err ? h("p", { className: "understood-error", role: "alert" }, err) : null,
       __mpStore.err ? h("p", { className: "understood-error", role: "alert" }, __mpStore.err) : null,

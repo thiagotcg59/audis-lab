@@ -5099,6 +5099,7 @@ C) Terceira alternativa`,
       "/radar": () => (0, Qa.jsx)(__RDR, {}),
       "/flashcards": () => (0, Qa.jsx)(__FC, {}),
       "/mapas": () => (0, Qa.jsx)(__MP, {}),
+      "/teoria": () => (0, Qa.jsx)(__TE, {}),
       "/conquistas": () => (0, Qa.jsx)(__CQ, {}),
       "/adicionar": () => (0, Qa.jsx)(g0, {}),
     };
