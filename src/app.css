@@ -9443,3 +9443,74 @@ a.qd-btn {
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* Teoria: conversa com o Claude para mudar o texto */
+.te-chat-abrir {
+  margin-top: 12px;
+  align-items: center;
+}
+.te-chat {
+  margin-top: 14px;
+  max-width: 760px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.te-chat-h {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+.te-chat > p.meta {
+  margin: 0;
+}
+.te-msgs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.te-msg {
+  margin: 0;
+  max-width: 88%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font:
+    14px/1.5 Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.te-msg.u {
+  align-self: flex-end;
+  background: #35432e;
+  color: #fff;
+}
+.te-msg.c {
+  align-self: flex-start;
+  background: #f1f4ee;
+  color: var(--ink);
+}
+.te-chat form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.te-chat textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cfd5c7;
+  border-radius: 8px;
+  padding: 10px;
+  resize: vertical;
+  color: var(--ink);
+  background: #fff;
+  font:
+    16px/1.4 Arial,
+    sans-serif;
+}

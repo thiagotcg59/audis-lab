@@ -154,7 +154,7 @@ A classe `sh` divide o acervo em **páginas** na coleção `pages`. Cada documen
 | `quadro` | um documento por imagem: `sid` (seção), `asset`, `title`, `o` (ordem), `q`/`qn`/`qb` (questão), `read` (leitura do Claude), `fc` (virou flashcard) | Quadro |
 | `quadroimg` | imagem em base64, só quando o envio de arquivos não está disponível | Quadro |
 | `mapas` | um documento por mapa: `nome`, `disc`, `srs` (`s` degrau, `d` próxima data, `t` último treino, `r` % lembrado), `pags` (cada página: `id`, `asset` ou `dbimg`, `titulo`, `ramos[].itens[]` com `id`, `x` e as lacunas entre `{{ }}`, `m` selo; `mst` com a última resposta de cada lacuna, chave `<id do item>\|<nº>`). Cada ramo pode ter `subs` (chaves de nós da árvore do Material, as mesmas de `Zb`) e `sug` (sugestões do Claude ainda não confirmadas). O mapa pode ter `faltas` (`itens[]`: `rid`, `iid`, `sid` seção, `x` afirmação, `txt` parágrafo sugerido, `st` `p` proposta criada ou `x` dispensado). A imagem de uma página sem `asset` fica em `quadroimg/<id da página>` | Mapas |
-| `teoria` | um documento por mapa (mesmo id): `nome`, `caps` (`rid` id do ramo, `t` título, `s` retrato do ramo quando o capítulo foi escrito, `auto` subtemas do Material que o Claude achou para o capítulo, `bl` blocos `{ k: "f" fonte | "c" complemento do Claude, x, g: trechos marcados do Material que tratam do mesmo ponto [{ s: id da seção, p: frase }] }`) |
+| `teoria` | um documento por mapa (mesmo id): `nome`, `caps` (`rid` id do ramo, `t` título, `s` retrato do ramo quando o capítulo foi escrito, `auto` subtemas do Material que o Claude achou para o capítulo, `bl` blocos `{ k: "f" fonte | "c" complemento do Claude, x, g: trechos marcados do Material que tratam do mesmo ponto [{ s: id da seção, p: frase }] }`), `livre` (texto mudado pela conversa: os capítulos têm `id` e `rids` em vez de `rid`), `ant` (versão anterior, para desfazer), `chat` (últimas 12 mensagens) |
 | `ciclo` | dois documentos. `edital`: `nome`, `discs` (`id`, `n` nome, `q` questões, `peso`, `b` blocos por volta, `as` assuntos `{ id, t }`); só existe depois que o aluno edita, antes vale `__ciRef`. `andamento`: `volta`, `done` (blocos feitos na volta, chave `<disciplina>#<nº>`), `cont` (blocos por assunto), `tot` (blocos por disciplina), `log` (últimos 400 blocos) |
 | `plano` | `config` (minutos padrão por dia), `w-AAAA-MM-DD` (uma semana, pela segunda-feira): `mins`, `blocks`, `reasons`, `claude` | Plano da semana |
 
@@ -208,6 +208,7 @@ Todas usam `sample(...)` ou `sample.json(...)`, com `modelTier` `quick`, `defaul
 | Mapas: sugerir subtemas para os ramos / comparar o mapa com o Material | `__mpSuggest` / `__mpCompare` | `default` |
 | Mapas: transcrever a página em ramos e lacunas | `__mpReadPage` | `default`, com imagem |
 | Teoria: achar no Material os subtemas de cada ramo / escrever um capítulo | `__teLigar` / `__teCap` | `default` |
+| Teoria: conversa para mudar o texto (plano da mudança / um pedido por capítulo reescrito) | `__teConversa` / `__teCapChat` | `default` |
 | Plano: ajustar por pedido em texto | `adjust` dentro de `__PL` | `default` |
 
 Os prompts tratam o texto do aluno e das questões como dado, pedem JSON e validam a resposta antes de salvar.
