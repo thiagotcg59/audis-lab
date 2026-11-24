@@ -1078,6 +1078,7 @@ var __qdStore = {
             re_ && !rd ? h("p", { className: "understood-error", role: "alert" }, re_) : null,
           ),
         ),
+        h(__MMPanel, { key: cur.id, it: cur, sec: x }),
       );
     }
     return h(
@@ -1106,6 +1107,7 @@ var __qdStore = {
           }),
         ),
       ),
+      h(__MMBar, { sid: x.id }),
       canAdd
         ? h(
             "div",

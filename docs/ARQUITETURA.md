@@ -148,7 +148,7 @@ A classe `sh` divide o acervo em **páginas** na coleção `pages`. Cada documen
 |---|---|---|
 | `fcards` | `srs` (agenda de cada card: `d` próxima data, `i` intervalo, `n` vezes, `r` resultado `u`/`p`/`n`, `t` quando), `q0`…`q7` (perguntas geradas pelo Claude) | Flashcards |
 | `rxerr` | `types` (tipo de cada erro: `t`, e o par `a`/`b` quando é confusão), `pairs` (quadros comparativos) | Raio-X |
-| `quadro` | um documento por imagem: `sid` (seção), `asset`, `title`, `o` (ordem), `q`/`qn`/`qb` (questão), `read` (leitura do Claude), `fc` (virou flashcard) | Quadro |
+| `quadro` | um documento por imagem: `sid` (seção), `asset`, `title`, `o` (ordem), `q`/`qn`/`qb` (questão), `read` (leitura do Claude), `fc` (virou flashcard), `mapa` (transcrição como mapa mental: `ramos[].itens[].x` com as lacunas entre `{{ }}`), `mst` (última resposta de cada lacuna, `y`/`n`), `mat` (último treino) | Quadro |
 | `quadroimg` | imagem em base64, só quando o envio de arquivos não está disponível | Quadro |
 | `plano` | `config` (minutos padrão por dia), `w-AAAA-MM-DD` (uma semana, pela segunda-feira): `mins`, `blocks`, `reasons`, `claude` | Plano da semana |
 
@@ -170,6 +170,7 @@ Cada módulo usa um prefixo próprio. Funções com letra minúscula depois de `
 | `25-raio-x-dos-erros.js` | `__rx` | classificação dos erros (regras e Claude), pares confundidos, treino (`__RXTrain`), tela `__RX`, abas `__RXW` |
 | `26-quadro-do-topico.js` | `__qd` | guarda e lê imagens, leitura pelo Claude, mural e detalhe (`__QD`), alfinete na árvore (`__QDPin`) |
 | `27-plano-da-semana.js` | `__pl` | gerador do plano (`__plGen`), progresso automático (`__plProg`), ajuste pelo Claude, tela `__PL`, abas `__PLW`; no fim, `__rxAuto` (abre o treino do Raio-X pela URL) |
+| `29-mapa-mental.js` | `__mm` | leitura de uma imagem do Quadro como mapa mental (`__mmRead`), lacunas (`__mmParts`, `__mmGaps`), treino (`__MMStudy`), bloco no detalhe da imagem (`__MMPanel`) e faixa do tópico (`__MMBar`). Usa o armazenamento do Quadro (`__qdStore`, `__qdPut`) |
 | `28-material-unico-do-subtema.js` | `__SBV` | leitura de um subtema inteiro; é o único módulo escrito no estilo do compilador |
 
 Pontos em que o núcleo foi alterado para encaixar os módulos (procure pelo nome):
@@ -193,6 +194,7 @@ Todas usam `sample(...)` ou `sample.json(...)`, com `modelTier` `quick`, `defaul
 | Flashcards: gerar perguntas / corrigir resposta | `__fcGen` / `__fcGrade` | `default` / `quick` |
 | Raio-X: classificar erros / quadro comparativo | `__rxClassify` / `__rxCompare` | `quick` / `default` |
 | Quadro: ler imagem e comparar com o material | `__qdRead` | `default`, com imagem |
+| Mapa mental: transcrever a imagem em ramos e lacunas | `__mmRead` | `default`, com imagem |
 | Plano: ajustar por pedido em texto | `adjust` dentro de `__PL` | `default` |
 
 Os prompts tratam o texto do aluno e das questões como dado, pedem JSON e validam a resposta antes de salvar.

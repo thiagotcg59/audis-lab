@@ -8160,3 +8160,278 @@ td.rd-h5 {
     padding: 14px;
   }
 }
+
+/* Mapa mental (módulo 29): bloco no Quadro e treino de lacunas */
+.mm-panel {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+.mm-panel > * {
+  max-width: 100%;
+}
+.mm-sum {
+  margin: 0;
+  font-size: 14px;
+}
+.mm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mm-chips span,
+.mm-branch {
+  font:
+    700 11px Arial,
+    sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #35432e;
+  background: #dfead9;
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+.mm-branch {
+  display: inline-block;
+}
+.mm-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.mm-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+  background: #eef2ec;
+  border: 1px solid #dfe6dc;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.mm-bar > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.mm-tx {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8faf7;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+}
+.mm-items {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mm-items li {
+  position: relative;
+  padding-left: 14px;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.mm-items li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.7em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #9aa39b;
+}
+.mm-mark {
+  font:
+    700 10px Arial,
+    sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #fbf3df;
+  border: 1px solid #ecd9a4;
+  color: #7a5a10;
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+.mm-ctx {
+  font-weight: 700;
+  color: #35432e;
+}
+.mm-gap {
+  display: inline-block;
+  margin: 0 3px;
+  max-width: 100%;
+  height: 1.35em;
+  vertical-align: text-bottom;
+  border-radius: 5px;
+  background: #dfe4de;
+  border: 0;
+  padding: 0;
+  font: inherit;
+}
+button.mm-gap.now {
+  background: #fff;
+  box-shadow: 0 0 0 2px #516a43;
+  color: #516a43;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1.2;
+}
+b.mm-gap {
+  margin: 0;
+  height: auto;
+  background: none;
+  vertical-align: baseline;
+  border-radius: 0;
+}
+b.mm-gap.open {
+  background: #fff3c4;
+  border-radius: 4px;
+  padding: 0 3px;
+}
+b.mm-gap.done.y {
+  border-bottom: 2px solid #3d8b57;
+}
+b.mm-gap.done.n {
+  border-bottom: 2px solid #c4473a;
+}
+.mm-study {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(20, 22, 20, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.mm-sheet {
+  background: #fff;
+  color: var(--ink);
+  width: min(620px, 100%);
+  max-height: 100%;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.mm-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px 12px;
+}
+.mm-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.mm-head b {
+  font:
+    400 20px/1.2 var(--serif);
+  overflow-wrap: anywhere;
+}
+.mm-x {
+  border: 1px solid #cfd5c7;
+  background: #fff;
+  color: #35432e;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  cursor: pointer;
+}
+.mm-prog {
+  height: 4px;
+  background: var(--line);
+  flex: none;
+}
+.mm-prog i {
+  display: block;
+  height: 100%;
+  background: #516a43;
+  transition: width 0.2s;
+}
+.mm-body {
+  padding: 18px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 160px;
+}
+.mm-body .mm-items li:not(.cur) {
+  color: #6c736d;
+}
+.mm-orig {
+  text-align: center;
+  background: #f4f6f3;
+}
+.mm-orig img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+.mm-foot {
+  padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+.mm-foot .mm-btns {
+  width: 100%;
+}
+.mm-foot .mm-btns .qd-btn {
+  flex: 1;
+  justify-content: center;
+  padding: 12px 14px;
+  font-size: 14px;
+  white-space: normal;
+}
+.mm-end {
+  padding: 8px 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mm-end h3 {
+  margin: 0;
+  font:
+    400 22px/1.2 var(--serif);
+}
+@media (max-width: 640px) {
+  .mm-study {
+    padding: 0;
+    align-items: stretch;
+  }
+  .mm-sheet {
+    border-radius: 0;
+    width: 100%;
+  }
+  .mm-bar .mm-btns,
+  .mm-bar .mm-btns .qd-btn {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+  }
+}

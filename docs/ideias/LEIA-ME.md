@@ -12,6 +12,7 @@ Maquetes feitas antes de cada função, sobre a tela real do app. Servem de refe
 | `quadro-do-topico-material-audis.png` | implementada (versão 28) |
 | `plano-da-semana-audis.png` | implementada (versão 29) |
 | `mira-dos-grifos-audis.png`, `rodada-da-banca-audis.png` | só ideia |
+| `mapas-0-entrada-audis.png`, `mapas-a-lacunas-audis.png`, `mapas-b-em-branco-audis.png`, `mapas-c-julgue-audis.png`, `mapas-d-mapa-x-banca-audis.png` | estudar pelos mapas mentais: a entrada e as Lacunas foram implementadas (módulo 29); Mapa em branco, Julgue e Mapa × banca são só ideia |
 | `treino-de-grifos-audis.png`, `termometro-entendimento-audis.png`, `plano-ate-a-prova-audis.png` | ideias anteriores; não há função com esses nomes no código atual |
 
 O que foi implementado pode diferir da maquete; vale o que está no app.

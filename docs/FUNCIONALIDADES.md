@@ -9,6 +9,7 @@
 | **Missões › Plano da semana** | Plano semanal em blocos (questões, erros, flashcards, material, fechamento, bloco livre), montado a partir do tempo de cada dia e do que está pendente. Tudo editável: mudar, mover, duplicar, excluir, criar blocos, pedir ajuste ao Claude, replanejar. Balanço planejado × feito. |
 | **Material** | O Material Único: seções por disciplina › tema › subtema, com grifos ligados às questões que cobraram cada trecho. Abas Completo, Revisão, Visual e Quadro. Leitura de um subtema inteiro. |
 | **Material › Quadro** | Mural de imagens por tópico (prints dos comentários do TEC). O Claude lê a imagem, compara com o texto do tópico e prepara um flashcard da tese. |
+| **Material › Quadro › Mapa mental** | Uma imagem do Quadro pode ser lida como página de mapa mental: o Claude transcreve em ramos e afirmações e marca as palavras-chave. Treino de lacunas (uma por vez, Lembrei / Não lembrei), por imagem ou juntando todas as páginas do tópico; revisão só das que faltaram. |
 | **Erros › Caderno de erros** | Cada erro com regra certa, causa provável, pegadinha e frase de memorização. Revisão espaçada. |
 | **Erros › Raio-X** | Classifica os erros por tipo de deslize, mostra pares de institutos confundidos, matriz matéria × tipo, erros por semana e treinos dirigidos. |
 | **Flashcards** | Cards a partir dos grifos já classificados e das imagens do Quadro. Resposta por escrito corrigida pelo Claude; escala Consolidado, Parcialmente consolidado, Não consolidado, separada da marcação dos grifos. |
@@ -26,6 +27,7 @@
 | 27 | Raio-X dos erros (aba em Erros) |
 | 28 | Quadro do tópico (aba no Material); o artefato passou a guardar imagens |
 | 29 | Plano da semana editável (aba em Missões) |
+| depois da 29 (só neste projeto, ainda não publicado) | Mapa mental com lacunas, dentro do Quadro |
 
 Antes disso, na mesma linha de evolução: Radar da banca, mapa de Conquistas, barra de entendimento dos grifos, Material único do subtema e Flashcards da banca.
 
@@ -36,6 +38,7 @@ As imagens estão em `docs/ideias/`.
 - **Mira dos grifos** e **Rodada da banca**: ideias que deram origem aos Flashcards; não foram implementadas como desenhadas.
 - **Lei seca da banca**: mapa dos artigos de lei cobrados nas questões, com o texto do artigo e as trocas da banca marcadas. Ficou só no planejamento; não há imagem.
 - No Quadro: "grifar no texto" a partir da imagem (os grifos nascem das questões, não há grifo manual) e flashcards "A × B" a partir dos pares do Raio-X.
+- Mapas mentais: das quatro alternativas desenhadas (`mapas-*.png`), só as Lacunas foram feitas. Faltam Mapa em branco, Julgue as afirmações e Mapa × banca.
 - No Plano da semana: enviar os blocos para o Google Agenda.
 
 ## MAGISara
