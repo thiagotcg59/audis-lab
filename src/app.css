@@ -9901,3 +9901,48 @@ a.qd-btn {
     13px Arial,
     sans-serif;
 }
+
+/* Treino de lacunas: resposta escrita e classificação (src/modulos/29-mapa-mental.js) */
+b.mm-gap.done.p {
+  border-bottom: 2px solid #c99a2e;
+}
+.mm-resp {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cfd5c7;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  padding: 12px 14px;
+  font:
+    16px/1.4 Arial,
+    sans-serif;
+}
+.mm-nota {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-left: 4px solid #8c9980;
+  border-radius: 0 10px 10px 0;
+  background: #f5f6f3;
+  color: var(--ink);
+  font:
+    14px/1.45 Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.mm-nota.y {
+  border-left-color: #3d8b57;
+}
+.mm-nota.p {
+  border-left-color: #c99a2e;
+}
+.mm-nota.n {
+  border-left-color: #c4473a;
+}
+.mm-foot .mm-tres .qd-btn {
+  padding: 12px 8px;
+}
