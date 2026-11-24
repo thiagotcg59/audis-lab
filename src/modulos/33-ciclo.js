@@ -179,6 +179,56 @@
     } catch {}
   }
 
+  // Mapa mental de um assunto do edital: o mapa guarda `ci` (id do assunto). É criado na primeira vez
+  // que o aluno pede para abrir o mapa ou a teoria do assunto, com o nome do assunto e a disciplina.
+  function __ciMapaDe(assId) {
+    return Object.values(__mpStore.items).find((m) => m && m.ci === assId && Array.isArray(m.pags)) || null;
+  }
+  function __ciAbrir(d, a, rota) {
+    let m = __ciMapaDe(a.id);
+    if (!m) {
+      if (!__mpStore.loaded) return;
+      let nome = a.t
+        .replace(/^\s*\d+(\.\d+)*\.?\s+/, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      nome.length > 90
+        ? (nome = nome.slice(0, 89).replace(/\s+\S*$/, "") + "…")
+        : (nome = nome.replace(/\.$/, ""));
+      m = { id: __mpId("m"), nome: nome || "Assunto do edital", disc: d.n.slice(0, 60), at: __qdNow(), pags: [], ci: a.id };
+      __mpPut(m);
+    }
+    location.hash = "#/" + rota + "?m=" + encodeURIComponent(m.id);
+  }
+  function __CIAtalhos({ d, a }) {
+    let h = __rdR.createElement,
+      m = __ciMapaDe(a.id),
+      n = m ? __mpAllRamos(m).length : 0;
+    return h(
+      "div",
+      { className: "ci-atalhos" },
+      h(
+        "button",
+        { type: "button", className: "qd-btn", disabled: !m && !__mpStore.loaded, onClick: () => __ciAbrir(d, a, "mapas") },
+        m ? "Abrir o mapa" : "Criar o mapa do assunto",
+      ),
+      h(
+        "button",
+        { type: "button", className: "qd-btn", disabled: !m && !__mpStore.loaded, onClick: () => __ciAbrir(d, a, "teoria") },
+        "Abrir a teoria",
+      ),
+      h(
+        "span",
+        { className: "meta" },
+        !m
+          ? "O mapa é criado com o nome deste assunto."
+          : n
+            ? `Mapa com ${n} ${n === 1 ? "ramo" : "ramos"}.`
+            : "Mapa criado. Envie as páginas nele para escrever a teoria.",
+      ),
+    );
+  }
+
   // --- uma disciplina no mapa do edital ---
   function __CIDisc({ d, i, an, sel, onPick }) {
     let h = __rdR.createElement,
@@ -290,7 +340,12 @@
                       : h("i", null),
                     n > 6 ? h("small", null, "+", n - 6) : null,
                   ),
-                  h("span", { className: "ci-t" }, a.t),
+                  h(
+                    "span",
+                    { className: "ci-t" },
+                    a.t,
+                    __ciMapaDe(a.id) ? h("small", { className: "ci-tem" }, " · tem mapa") : null,
+                  ),
                 ),
           );
         }),
@@ -345,6 +400,7 @@
   // --- tela Ciclo ---
   function __CI() {
     __ciUse();
+    __mpUse();
     let h = __rdR.createElement,
       ed = __ciEd(),
       an = __ciAn(),
@@ -444,6 +500,7 @@
                   h("div", { className: "ci-clock", role: "timer", "aria-live": "off" }, mm, ":", ss),
                   h("b", { className: "ci-now-d" }, cur?.d.n || "Disciplina"),
                   ass ? h("p", { className: "ci-now-a" }, ass.t) : null,
+                  ass ? h(__CIAtalhos, { d: cur.d, a: ass }) : null,
                   h(
                     "div",
                     { className: "mm-btns" },
@@ -517,6 +574,7 @@
                       ),
                     ),
                   ),
+                  ass ? h(__CIAtalhos, { d: cur.d, a: ass }) : null,
                   h(
                     "div",
                     { className: "mm-btns" },
