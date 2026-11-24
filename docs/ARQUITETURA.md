@@ -151,7 +151,7 @@ A classe `sh` divide o acervo em **páginas** na coleção `pages`. Cada documen
 | `rxerr` | `types` (tipo de cada erro: `t`, e o par `a`/`b` quando é confusão), `pairs` (quadros comparativos) | Raio-X |
 | `quadro` | um documento por imagem: `sid` (seção), `asset`, `title`, `o` (ordem), `q`/`qn`/`qb` (questão), `read` (leitura do Claude), `fc` (virou flashcard) | Quadro |
 | `quadroimg` | imagem em base64, só quando o envio de arquivos não está disponível | Quadro |
-| `mapas` | um documento por mapa: `nome`, `disc`, `srs` (`s` degrau, `d` próxima data, `t` último treino, `r` % lembrado), `pags` (cada página: `id`, `asset` ou `dbimg`, `titulo`, `ramos[].itens[]` com `id`, `x` e as lacunas entre `{{ }}`, `m` selo; `mst` com a última resposta de cada lacuna, chave `<id do item>\|<nº>`). A imagem de uma página sem `asset` fica em `quadroimg/<id da página>` | Mapas |
+| `mapas` | um documento por mapa: `nome`, `disc`, `srs` (`s` degrau, `d` próxima data, `t` último treino, `r` % lembrado), `pags` (cada página: `id`, `asset` ou `dbimg`, `titulo`, `ramos[].itens[]` com `id`, `x` e as lacunas entre `{{ }}`, `m` selo; `mst` com a última resposta de cada lacuna, chave `<id do item>\|<nº>`). Cada ramo pode ter `subs` (chaves de nós da árvore do Material, as mesmas de `Zb`) e `sug` (sugestões do Claude ainda não confirmadas). O mapa pode ter `faltas` (`itens[]`: `rid`, `iid`, `sid` seção, `x` afirmação, `txt` parágrafo sugerido, `st` `p` proposta criada ou `x` dispensado). A imagem de uma página sem `asset` fica em `quadroimg/<id da página>` | Mapas |
 | `plano` | `config` (minutos padrão por dia), `w-AAAA-MM-DD` (uma semana, pela segunda-feira): `mins`, `blocks`, `reasons`, `claude` | Plano da semana |
 
 ### Preferências no navegador (`localStorage`)
@@ -173,12 +173,14 @@ Cada módulo usa um prefixo próprio. Funções com letra minúscula depois de `
 | `26-quadro-do-topico.js` | `__qd` | guarda e lê imagens, leitura pelo Claude, mural e detalhe (`__QD`), alfinete na árvore (`__QDPin`) |
 | `27-plano-da-semana.js` | `__pl` | gerador do plano (`__plGen`), progresso automático (`__plProg`), ajuste pelo Claude, tela `__PL`, abas `__PLW`; no fim, `__rxAuto` (abre o treino do Raio-X pela URL) |
 | `29-mapa-mental.js` | `__mp` | área Mapas: armazenamento próprio (`__mpStore`, `__mpPut`), leitura de uma página pelo Claude (`__mpReadPage`), lacunas (`__mpParts`, `__mpGaps`, `__mpBuild`), agenda (`__mpSched`), migração do que foi lido no Quadro (`__mpMigrate`); telas `__MP` (lista), `__MPMap` (um mapa), `__MPRamos` e `__MPItemEdit` (correção), `__MPStudy` (treino), `__MPBadge` (contador do menu). As imagens usam as funções do Quadro (`__qdPrep`, `__qdStoreImg`, `__qdSrc`) |
+| `30-mapas-e-material.js` | `__mp` | ligação dos ramos de um mapa com o Material: índice dos subtemas (`__mpIdx`, `__mpNodesFor`), espelho de questões e grifos (`__mpNodeStats`, `__mpRamoStats`), sugestão de subtemas (`__mpSuggest`) e comparação com o texto das seções (`__mpCompare`) pelo Claude; componentes `__MPSubs` (subtemas de um ramo), `__MPBanca` (Mapa × banca) e `__MPLink` (atalho no Material) |
 | `28-material-unico-do-subtema.js` | `__SBV` | leitura de um subtema inteiro; é o único módulo escrito no estilo do compilador |
 
 Pontos em que o núcleo foi alterado para encaixar os módulos (procure pelo nome):
 
 - Rotas em `wM` (`90-nucleo-2.js`): `__PLW`, `__RXW`, `__RDR`, `__FC`, `__CQ`, `__MP`.
 - Menu lateral (`10-nucleo-1.js`): itens Flashcards, Mapas, Conquistas e Radar, com os ícones `__fcIcon`, `__mpIcon`, `__cqIcon`, `__rdIcon`, e os contadores `__fcBadge` e `__MPBadge`.
+- Tela Material (`t0`) e Material único do subtema (`__SBV`): atalho para o mapa (`__MPLink`).
 - Tela Material (`t0`): aba "Quadro" (`__QDTab`, `__QD`), barra `__UTB`, botão "Material único do subtema" (`__sbOpen`, `__SBV`).
 - Árvore do material (`DO`): alfinete `__QDPin`.
 - Flashcards (`__fcCards`, `__FCCard`): cards vindos do Quadro (`__qdFcAdd`, `__QDFcBack`).
@@ -196,6 +198,7 @@ Todas usam `sample(...)` ou `sample.json(...)`, com `modelTier` `quick`, `defaul
 | Flashcards: gerar perguntas / corrigir resposta | `__fcGen` / `__fcGrade` | `default` / `quick` |
 | Raio-X: classificar erros / quadro comparativo | `__rxClassify` / `__rxCompare` | `quick` / `default` |
 | Quadro: ler imagem e comparar com o material | `__qdRead` | `default`, com imagem |
+| Mapas: sugerir subtemas para os ramos / comparar o mapa com o Material | `__mpSuggest` / `__mpCompare` | `default` |
 | Mapas: transcrever a página em ramos e lacunas | `__mpReadPage` | `default`, com imagem |
 | Plano: ajustar por pedido em texto | `adjust` dentro de `__PL` | `default` |
 

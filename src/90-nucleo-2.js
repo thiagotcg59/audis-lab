@@ -245,6 +245,7 @@ function t0() {
                             }),
                           ],
                         }),
+                      s !== "Quadro" && (0, k.jsx)(__MPLink, { sectionId: x.id }, "mp" + x.id),
                       s !== "Quadro" && (0, k.jsx)(__UTB, { highlights: A, level: ae, onLevel: J }, x.id),
                       s === "Completo" &&
                         (0, k.jsxs)(k.Fragment, {

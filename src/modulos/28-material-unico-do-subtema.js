@@ -73,6 +73,7 @@ function __SBV({ nodeKey: sk, onOpen: op }) {
                     .filter(Boolean)
                     .join(" · "),
                 }),
+                (0, k.jsx)(__MPLink, { nodeKey: key }),
                 (0, k.jsx)(__UTB, {
                   highlights: rows.flatMap((r) => r.A),
                   level: ae,

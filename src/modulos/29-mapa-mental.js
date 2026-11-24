@@ -418,17 +418,19 @@
   }
 
   // --- treino de lacunas: uma por vez, o ramo inteiro à vista ---
-  function __MPStudy({ mapId, pageIds, only, full, onClose }) {
+  function __MPStudy({ mapId, pageIds, ramoIds, only, full, onClose }) {
     __mpUse();
     let h = __rdR.createElement;
     // a fila é montada uma vez, ao abrir: responder não pode reordenar o treino
     let [queue, setQueue] = __rdR.useState(() => {
       let q = [],
-        m = __mpStore.items[mapId];
+        m = __mpStore.items[mapId],
+        rs = ramoIds ? new Set(ramoIds) : null;
       for (let pid of pageIds) {
         let p = m?.pags.find((x) => x.id === pid);
         if (!p) continue;
-        for (let g of __mpGaps(p)) (!only || (p.mst || {})[g.key] === "n") && q.push({ pid, ...g });
+        for (let g of __mpGaps(p))
+          (!rs || rs.has(g.rid)) && (!only || (p.mst || {})[g.key] === "n") && q.push({ pid, ...g });
       }
       return q;
     });
@@ -837,6 +839,7 @@
                     )
                   : null,
               ),
+          h(__MPSubs, { map, ramo: b }),
           h(
             "ul",
             { className: "mm-items" },
@@ -923,6 +926,7 @@
       [edit, setEdit] = __rdR.useState(null),
       [conf, setConf] = __rdR.useState(""),
       [lb, setLb] = __rdR.useState(!1),
+      [view, setView] = __rdR.useState("pag"),
       fileRef = __rdR.useRef(null),
       today = ot(new Date()),
       s = __mpStats(map),
@@ -1097,6 +1101,28 @@
       __mpStore.err ? h("p", { className: "understood-error", role: "alert" }, __mpStore.err) : null,
       h(
         "div",
+        { className: "mp-views", role: "group", "aria-label": "O que ver do mapa" },
+        h(
+          "button",
+          { type: "button", className: view === "pag" ? "on" : "", onClick: () => setView("pag") },
+          "Páginas",
+        ),
+        h(
+          "button",
+          { type: "button", className: view === "banca" ? "on" : "", onClick: () => setView("banca") },
+          "Mapa × banca",
+        ),
+      ),
+      view === "banca"
+        ? h(__MPBanca, {
+            map,
+            onTrain: (rids) => setRun({ ids: readIds, ramoIds: rids, only: !1 }),
+          })
+        : null,
+      view === "banca"
+        ? null
+        : h(
+        "div",
         { className: "mp-tabs", role: "tablist", "aria-label": "Páginas do mapa" },
         map.pags.map((p, i) =>
           h(
@@ -1133,7 +1159,9 @@
           },
         }),
       ),
-      page
+      view === "banca"
+        ? null
+        : page
         ? h(
             "section",
             { className: "mp-page", "aria-label": "Página " + (pidx + 1) },
@@ -1347,6 +1375,7 @@
         ? h(__MPStudy, {
             mapId: map.id,
             pageIds: run.ids,
+            ramoIds: run.ramoIds,
             only: run.only,
             full: run.full,
             onClose: () => setRun(null),
