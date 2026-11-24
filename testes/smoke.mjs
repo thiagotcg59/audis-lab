@@ -19,7 +19,7 @@ await new Promise((ok, no) => { srv.stdout.on('data', d => String(d).includes('h
 
 const rotas = [
   ['/', 'Seu estudo, hoje.'], ['/missoes', 'Missões do dia'], ['/missoes?aba=semana', 'Plano da semana'], ['/material', 'Material Único'],
-  ['/erros', 'Meus Erros'], ['/erros?aba=raiox', 'Raio-X dos erros'], ['/flashcards', 'Flashcards da banca'], ['/mapas', 'Seus mapas'], ['/professor', null],
+  ['/erros', 'Meus Erros'], ['/erros?aba=raiox', 'Raio-X dos erros'], ['/flashcards', 'Flashcards da banca'], ['/mapas', 'Seus mapas'], ['/edital', 'Edital'], ['/professor', null],
   ['/desempenho', 'Seu desempenho'], ['/conquistas', 'Seu mapa de conquista'], ['/radar', 'Radar da banca'], ['/adicionar', null],
 ];
 const browser = await chromium.launch();

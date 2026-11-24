@@ -71,6 +71,7 @@ O resultado é **um único arquivo dentro de uma função** (`(() => { ... })()`
 | `/mapas` | `__MP` | `?m=<id>` abre um mapa |
 | `/teoria` | `__TE` | `?m=<id do mapa>` abre o documento do assunto |
 | `/ciclo` | `__CI` | quadro do ciclo de estudos |
+| `/edital` | `__ED` | visão geral do edital: um quadro por assunto, que abre a Teoria |
 | `/professor` | `i0` | `?questao=<id>` |
 | `/desempenho` | `c0` | |
 | `/conquistas` | `__CQ` | |
@@ -181,11 +182,12 @@ Cada módulo usa um prefixo próprio. Funções com letra minúscula depois de `
 | `31-teoria.js` | `__te` | área Teoria: um documento por mapa, um capítulo por ramo. Armazenamento próprio (`__teStore`, `__tePut`), escrita pelo Claude com um pedido por ramo, dois de cada vez, gravando cada capítulo assim que chega (`__teGerar`, `__teCap`), capítulos que faltam ou mudaram (`__teFalta`, `__teSigRamo`), e "O que já caiu" lido do Material pelos subtemas do ramo (`__TECaiu`, usa `__mpRamoStats`) |
 | `32-ciclo-edital.js` | `__ciRef` | edital de referência do Ciclo: Auditor-Fiscal da Receita Federal, Edital nº 1/2022 (FGV), transcrito do PDF oficial. Os ids das disciplinas e dos assuntos não podem mudar |
 | `33-ciclo.js` | `__ci` | área Ciclo: armazenamento próprio (`__ciStore`, `__ciSave`), fila da volta (`__ciFila`), registro e desfazer de bloco (`__ciFeito`, `__ciDesfazer`), cronômetro de 25 min guardado no localStorage (`audis:ci-timer`), mapa do edital por disciplina (`__CIDisc`). Não usa IA |
+| `34-edital.js` | `__ed` | área Edital: um painel por disciplina e um quadro por assunto, com o estado (sem teoria, só o mapa, teoria escrita: `__edInfo`) e os blocos do Ciclo. O quadro de um assunto com mapa é um link para `/teoria?m=<id>`; sem mapa, uma janela confirma e chama `__ciAbrir`. Não guarda nada: lê `__ciEd`, `__ciAn`, `__mpStore` e `__teStore`. Não usa IA |
 | `28-material-unico-do-subtema.js` | `__SBV` | leitura de um subtema inteiro; é o único módulo escrito no estilo do compilador |
 
 Pontos em que o núcleo foi alterado para encaixar os módulos (procure pelo nome):
 
-- Rotas em `wM` (`90-nucleo-2.js`): `__PLW`, `__RXW`, `__RDR`, `__FC`, `__CQ`, `__MP`.
+- Rotas em `wM` (`90-nucleo-2.js`): `__PLW`, `__RXW`, `__RDR`, `__FC`, `__CQ`, `__MP`, `__ED`.
 - Menu lateral (`10-nucleo-1.js`): itens Flashcards, Mapas, Conquistas e Radar, com os ícones `__fcIcon`, `__mpIcon`, `__cqIcon`, `__rdIcon`, e os contadores `__fcBadge` e `__MPBadge`.
 - Tela Material (`t0`) e Material único do subtema (`__SBV`): atalho para o mapa (`__MPLink`).
 - Tela Material (`t0`): aba "Quadro" (`__QDTab`, `__QD`), barra `__UTB`, botão "Material único do subtema" (`__sbOpen`, `__SBV`).

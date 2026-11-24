@@ -21962,6 +21962,12 @@ ${JSON.stringify(t, null, 2)}`;
     ["line", { x1: "12", x2: "15", y1: "14", y2: "11", key: "ci2" }],
     ["circle", { cx: "12", cy: "14", r: "8", key: "ci3" }],
   ]);
+  var __edIcon = G("LayoutGrid", [
+    ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "ed1" }],
+    ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "ed2" }],
+    ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "ed3" }],
+    ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "ed4" }],
+  ]);
   var be = U(X()),
     tO = [
       { label: "Hoje", href: "/", icon: Ad },
@@ -21972,6 +21978,7 @@ ${JSON.stringify(t, null, 2)}`;
       { label: "Mapas", href: "/mapas", icon: __mpIcon },
       { label: "Teoria", href: "/teoria", icon: __teIcon },
       { label: "Ciclo", href: "/ciclo", icon: __ciIcon },
+      { label: "Edital", href: "/edital", icon: __edIcon },
       { label: "Professor", href: "/professor", icon: Oo },
       { label: "Desempenho", href: "/desempenho", icon: vd },
       { label: "Conquistas", href: "/conquistas", icon: __cqIcon },

@@ -38,7 +38,7 @@ Abra http://127.0.0.1:5173. O app sobe com os seus dados (pasta `dados/`). Depoi
 | `npm run build:min` | Gera `dist/` minificado, do tamanho do que está publicado (precisa de `npm install`) |
 | `npm run preview` | Minifica e serve `dist/`, para conferir exatamente o que seria publicado |
 | `npm run check` | Monta e confere a sintaxe do `app.js` |
-| `npm run test:smoke` | Abre as 13 telas principais num navegador e confere que carregam sem erro. Usa uma cópia dos dados. Precisa de `npm install` e `npx playwright install chromium` |
+| `npm run test:smoke` | Abre as 14 telas principais num navegador e confere que carregam sem erro. Usa uma cópia dos dados. Precisa de `npm install` e `npx playwright install chromium` |
 
 ## Estrutura
 
