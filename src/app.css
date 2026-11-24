@@ -9139,3 +9139,291 @@ a.qd-btn {
   padding: 4px 6px;
   font-size: 12px;
 }
+
+/* Ciclo de estudos (src/modulos/33-ciclo.js) */
+.ci-now {
+  margin-top: 22px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--ci);
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+  scroll-margin-top: 16px;
+}
+.ci-clock {
+  font:
+    500 64px/1 Georgia,
+    "Times New Roman",
+    serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  letter-spacing: -1px;
+}
+.ci-now-d {
+  font:
+    700 16px/1.3 Arial,
+    sans-serif;
+  color: var(--ci);
+  overflow-wrap: anywhere;
+}
+.ci-now-a,
+.ci-msg {
+  margin: 0;
+  font:
+    14px/1.5 Arial,
+    sans-serif;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.ci-msg {
+  color: #35432e;
+  font-weight: 600;
+}
+.ci-pick {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.ci-pick label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  font:
+    700 11px Arial,
+    sans-serif;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.ci-pick select,
+.ci-in {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid #cfd5c7;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 9px 10px;
+  font:
+    14px/1.4 Arial,
+    sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.ci-volta {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ci-volta-h {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.ci-fila {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ci-fila button {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1.5px solid var(--ci);
+  background: #fff;
+  color: var(--ci);
+  border-radius: 8px;
+  padding: 6px 9px;
+  font:
+    600 12px Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.ci-fila button.ok {
+  background: var(--ci);
+  color: #fff;
+  cursor: default;
+}
+.ci-fila button.on {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ci) 28%, transparent);
+}
+.ci-fila button:disabled:not(.ok) {
+  opacity: 0.55;
+  cursor: default;
+}
+.ci-mapa {
+  margin-top: 34px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.ci-mapa > p.meta {
+  margin: 6px 0 0;
+}
+.ci-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+.ci-disc {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--ci);
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ci-disc header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ci-disc header b {
+  font:
+    700 15px/1.3 Arial,
+    sans-serif;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.ci-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font:
+    12px Arial,
+    sans-serif;
+  color: var(--muted);
+}
+.ci-step button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #cfd5c7;
+  border-radius: 50%;
+  background: #fff;
+  color: #35432e;
+  font:
+    700 16px/1 Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.ci-step button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ci-as {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ci-as li {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+.ci-a {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  text-align: left;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--ink);
+  font:
+    13px/1.4 Arial,
+    sans-serif;
+}
+.ci-a:hover,
+.ci-a.on {
+  background: #f1f4ee;
+}
+.ci-a.on {
+  box-shadow: inset 0 0 0 1.5px var(--ci);
+}
+.ci-t {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.ci-sq {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+  max-width: 44px;
+  margin-top: 3px;
+}
+.ci-sq i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  border: 1px solid #c9cfc8;
+  background: #fff;
+}
+.ci-sq i.f {
+  background: var(--ci);
+  border-color: var(--ci);
+}
+.ci-sq small {
+  font:
+    700 10px Arial,
+    sans-serif;
+  color: var(--muted);
+}
+.ci-x {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 8px 6px;
+}
+.ci-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ci-acts {
+  margin-top: 18px;
+}
+.ci-fonte {
+  margin: 14px 0 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .ci-pick {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ci-clock {
+    font-size: 54px;
+  }
+  .ci-fila button {
+    max-width: 120px;
+  }
+}

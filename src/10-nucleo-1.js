@@ -21957,6 +21957,11 @@ ${JSON.stringify(t, null, 2)}`;
     ["path", { d: "M6 12h2", key: "te5" }],
     ["path", { d: "M6 8h2", key: "te6" }],
   ]);
+  var __ciIcon = G("Timer", [
+    ["line", { x1: "10", x2: "14", y1: "2", y2: "2", key: "ci1" }],
+    ["line", { x1: "12", x2: "15", y1: "14", y2: "11", key: "ci2" }],
+    ["circle", { cx: "12", cy: "14", r: "8", key: "ci3" }],
+  ]);
   var be = U(X()),
     tO = [
       { label: "Hoje", href: "/", icon: Ad },
@@ -21966,6 +21971,7 @@ ${JSON.stringify(t, null, 2)}`;
       { label: "Flashcards", href: "/flashcards", icon: __fcIcon },
       { label: "Mapas", href: "/mapas", icon: __mpIcon },
       { label: "Teoria", href: "/teoria", icon: __teIcon },
+      { label: "Ciclo", href: "/ciclo", icon: __ciIcon },
       { label: "Professor", href: "/professor", icon: Oo },
       { label: "Desempenho", href: "/desempenho", icon: vd },
       { label: "Conquistas", href: "/conquistas", icon: __cqIcon },

@@ -5100,6 +5100,7 @@ C) Terceira alternativa`,
       "/flashcards": () => (0, Qa.jsx)(__FC, {}),
       "/mapas": () => (0, Qa.jsx)(__MP, {}),
       "/teoria": () => (0, Qa.jsx)(__TE, {}),
+      "/ciclo": () => (0, Qa.jsx)(__CI, {}),
       "/conquistas": () => (0, Qa.jsx)(__CQ, {}),
       "/adicionar": () => (0, Qa.jsx)(g0, {}),
     };

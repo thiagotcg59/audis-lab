@@ -70,6 +70,7 @@ O resultado é **um único arquivo dentro de uma função** (`(() => { ... })()`
 | `/flashcards` | `__FC` | |
 | `/mapas` | `__MP` | `?m=<id>` abre um mapa |
 | `/teoria` | `__TE` | `?m=<id do mapa>` abre o documento do assunto |
+| `/ciclo` | `__CI` | quadro do ciclo de estudos |
 | `/professor` | `i0` | `?questao=<id>` |
 | `/desempenho` | `c0` | |
 | `/conquistas` | `__CQ` | |
@@ -154,6 +155,7 @@ A classe `sh` divide o acervo em **páginas** na coleção `pages`. Cada documen
 | `quadroimg` | imagem em base64, só quando o envio de arquivos não está disponível | Quadro |
 | `mapas` | um documento por mapa: `nome`, `disc`, `srs` (`s` degrau, `d` próxima data, `t` último treino, `r` % lembrado), `pags` (cada página: `id`, `asset` ou `dbimg`, `titulo`, `ramos[].itens[]` com `id`, `x` e as lacunas entre `{{ }}`, `m` selo; `mst` com a última resposta de cada lacuna, chave `<id do item>\|<nº>`). Cada ramo pode ter `subs` (chaves de nós da árvore do Material, as mesmas de `Zb`) e `sug` (sugestões do Claude ainda não confirmadas). O mapa pode ter `faltas` (`itens[]`: `rid`, `iid`, `sid` seção, `x` afirmação, `txt` parágrafo sugerido, `st` `p` proposta criada ou `x` dispensado). A imagem de uma página sem `asset` fica em `quadroimg/<id da página>` | Mapas |
 | `teoria` | um documento por mapa (mesmo id): `nome`, `caps` (`rid` id do ramo, `t` título, `s` retrato do ramo quando o capítulo foi escrito, `auto` subtemas do Material que o Claude achou para o capítulo, `bl` blocos `{ k: "f" fonte | "c" complemento do Claude, x, g: trechos marcados do Material que tratam do mesmo ponto [{ s: id da seção, p: frase }] }`) |
+| `ciclo` | dois documentos. `edital`: `nome`, `discs` (`id`, `n` nome, `q` questões, `peso`, `b` blocos por volta, `as` assuntos `{ id, t }`); só existe depois que o aluno edita, antes vale `__ciRef`. `andamento`: `volta`, `done` (blocos feitos na volta, chave `<disciplina>#<nº>`), `cont` (blocos por assunto), `tot` (blocos por disciplina), `log` (últimos 400 blocos) |
 | `plano` | `config` (minutos padrão por dia), `w-AAAA-MM-DD` (uma semana, pela segunda-feira): `mins`, `blocks`, `reasons`, `claude` | Plano da semana |
 
 ### Preferências no navegador (`localStorage`)
@@ -177,6 +179,8 @@ Cada módulo usa um prefixo próprio. Funções com letra minúscula depois de `
 | `29-mapa-mental.js` | `__mp` | área Mapas: armazenamento próprio (`__mpStore`, `__mpPut`), leitura de uma página pelo Claude (`__mpReadPage`), lacunas (`__mpParts`, `__mpGaps`, `__mpBuild`), agenda (`__mpSched`), migração do que foi lido no Quadro (`__mpMigrate`); telas `__MP` (lista), `__MPMap` (um mapa), `__MPRamos` e `__MPItemEdit` (correção), `__MPStudy` (treino), `__MPBadge` (contador do menu). As imagens usam as funções do Quadro (`__qdPrep`, `__qdStoreImg`, `__qdSrc`) |
 | `30-mapas-e-material.js` | `__mp` | ligação dos ramos de um mapa com o Material: índice dos subtemas (`__mpIdx`, `__mpNodesFor`), espelho de questões e grifos (`__mpNodeStats`, `__mpRamoStats`), sugestão de subtemas (`__mpSuggest`) e comparação com o texto das seções (`__mpCompare`) pelo Claude; componentes `__MPSubs` (subtemas de um ramo), `__MPBanca` (Mapa × banca) e `__MPLink` (atalho no Material) |
 | `31-teoria.js` | `__te` | área Teoria: um documento por mapa, um capítulo por ramo. Armazenamento próprio (`__teStore`, `__tePut`), escrita pelo Claude com um pedido por ramo, dois de cada vez, gravando cada capítulo assim que chega (`__teGerar`, `__teCap`), capítulos que faltam ou mudaram (`__teFalta`, `__teSigRamo`), e "O que já caiu" lido do Material pelos subtemas do ramo (`__TECaiu`, usa `__mpRamoStats`) |
+| `32-ciclo-edital.js` | `__ciRef` | edital de referência do Ciclo: Auditor-Fiscal da Receita Federal, Edital nº 1/2022 (FGV), transcrito do PDF oficial. Os ids das disciplinas e dos assuntos não podem mudar |
+| `33-ciclo.js` | `__ci` | área Ciclo: armazenamento próprio (`__ciStore`, `__ciSave`), fila da volta (`__ciFila`), registro e desfazer de bloco (`__ciFeito`, `__ciDesfazer`), cronômetro de 25 min guardado no localStorage (`audis:ci-timer`), mapa do edital por disciplina (`__CIDisc`). Não usa IA |
 | `28-material-unico-do-subtema.js` | `__SBV` | leitura de um subtema inteiro; é o único módulo escrito no estilo do compilador |
 
 Pontos em que o núcleo foi alterado para encaixar os módulos (procure pelo nome):
