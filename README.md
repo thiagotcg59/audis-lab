@@ -111,6 +111,8 @@ Lá não existe servidor. Os arquivos de `pages/` fazem o papel dele dentro do n
 - **Trazer de volta ao computador:** `node scripts/empacotar-dados.mjs --abrir <pacote> dados-do-celular` cria uma pasta nova (nunca escreve por cima); confira com `AUDIS_DADOS=dados-do-celular npm run dev`.
 - **Sem IA:** não há onde guardar uma chave com segurança numa página pública, então os recursos com IA ficam escondidos.
 - Para testar antes de enviar: `npm run build:pages` gera `site/`.
+- **Instalar como app:** o site tem manifesto e ícones (`pages/manifest.webmanifest`, `pages/icones/`). No Android: menu do Chrome › "Adicionar à tela inicial". No iPhone: Safari › Compartilhar › "Adicionar à Tela de Início". No iPhone o app instalado tem armazenamento separado do Safari: carregue o pacote de dados de dentro do app (link "Dados neste aparelho" no fim da página).
+- **Vercel:** `vercel.json` já diz como montar (`site/`). Com o repositório importado em vercel.com, cada envio para a `main` republica sozinho. O endereço do Vercel e o do GitHub Pages guardam dados separados; escolha um para usar.
 
 ## Publicar de volta no claude.ai
 

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm install --no-save esbuild@0.24",
+  "buildCommand": "node scripts/build-pages.mjs",
+  "outputDirectory": "site",
+  "headers": [
+    {
+      "source": "/(sw.js|armazem.js|claude-shim.js|app.js|app.css|manifest.webmanifest)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ]
+}

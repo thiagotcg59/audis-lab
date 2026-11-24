@@ -21,6 +21,7 @@ try {
 fs.writeFileSync(path.join(site, 'app.js'), js);
 fs.writeFileSync(path.join(site, 'app.css'), css);
 fs.copyFileSync(path.join(raiz, 'dev/claude-shim.js'), path.join(site, 'claude-shim.js'));
-for (const f of ['index.html', 'dados.html', 'sw.js', 'armazem.js']) fs.copyFileSync(path.join(raiz, 'pages', f), path.join(site, f));
+for (const f of ['index.html', 'dados.html', 'sw.js', 'armazem.js', 'manifest.webmanifest']) fs.copyFileSync(path.join(raiz, 'pages', f), path.join(site, f));
+fs.cpSync(path.join(raiz, 'pages/icones'), path.join(site, 'icones'), { recursive: true });
 fs.writeFileSync(path.join(site, '.nojekyll'), '');
 console.log(`site/ pronto: app.js ${(Buffer.byteLength(js) / 1024).toFixed(0)} KB`);
