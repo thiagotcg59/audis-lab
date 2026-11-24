@@ -134,7 +134,7 @@
       if (out.text) { texto += (texto ? "\n" : "") + out.text; if (opts.onText) { try { opts.onText({ text: texto, delta: out.text }); } catch {} } }
       const calls = Array.isArray(out.calls) ? out.calls : [];
       if (!calls.length || !ferramentas.length) return { text: texto, truncated: !!out.truncated, modelTierApplied: modelTier };
-      turns.push({ role: "assistant", text: out.text || "", calls });
+      turns.push({ role: "assistant", text: out.text || "", calls, bruto: out.raw }); // "bruto": blocos exatos do modelo, que a API exige de volta sem alteração
       const results = [];
       for (const c of calls) {
         const t = ferramentas.find(x => x.name === c.name);

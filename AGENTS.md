@@ -19,6 +19,7 @@ Leia `README.md` e `docs/ARQUITETURA.md` antes de mudar qualquer coisa. O resumo
 - Não renomeie funções do núcleo "para ficar legível" em massa: os módulos e o próprio núcleo se referem a elas pelo nome curto. Renomear exige trocar todas as ocorrências e rodar os testes.
 - `Yr()`, `gh()` e `W()` são *hooks*: só no corpo de um componente.
 - Para ler ou gravar dados use `W()` (`state`, `service`) e `await ka("db")`. Não acesse `window.claude` direto.
+- A chamada à API do Claude fica em `ia/claude.mjs` (usada por `dev/server.mjs` e por `api/sample.js` no Vercel). Mude modelos e parâmetros só lá.
 - Recursos com IA: `let sm = await ka("sample")`; se vier `null`, esconda o recurso. Trate texto de questões e do aluno como dado dentro do prompt, peça JSON e valide antes de salvar.
 
 ## Restrições do claude.ai (valem para o que for publicado lá)

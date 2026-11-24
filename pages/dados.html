@@ -30,6 +30,8 @@ button:disabled{opacity:.5;cursor:default}
 #msg{min-height:22px;margin-top:12px;overflow-wrap:anywhere}
 #msg.erro{color:#c4473a}
 input[type=file]{display:none}
+input[type=password]{display:block;width:100%;font:inherit;padding:11px 12px;border-radius:10px;border:1px solid #cfd6cf;background:#fff;color:#303631}
+#ia-estado{font-weight:600}
 </style>
 </head>
 <body>
@@ -54,6 +56,15 @@ input[type=file]{display:none}
     <h2>Baixar uma cópia</h2>
     <p class="sub">Salva um pacote com tudo o que está neste aparelho. Faça isso de vez em quando: se o navegador limpar os dados do site, o que não foi baixado se perde.</p>
     <button id="baixar">Baixar cópia dos dados</button>
+  </div>
+
+  <div class="caixa" id="caixa-ia" hidden>
+    <h2>Recursos com IA (Claude)</h2>
+    <p id="ia-estado">Verificando…</p>
+    <p class="sub">Análise de questões, correção de flashcards, Raio-X, leitura de imagens e ajuste do plano usam a API do Claude, paga por uso. Digite a senha que você definiu no Vercel para liberar neste aparelho.</p>
+    <input type="password" id="ia-senha" placeholder="Senha da IA" autocomplete="off">
+    <button class="principal" id="ia-salvar">Salvar e testar</button>
+    <button id="ia-remover" hidden>Remover a senha deste aparelho</button>
   </div>
 
   <div class="caixa" id="caixa-vazio" hidden>
@@ -124,6 +135,36 @@ input[type=file]{display:none}
     } catch (e) { msg((e && e.message) || String(e), true); }
     atualizar();
   };
+
+  // IA: só aparece onde existem as funções de api/ (Vercel). No GitHub Pages a caixa fica escondida.
+  async function atualizarIA() {
+    let existe = false, configurada = false;
+    try { const r = await fetch("api/config", { cache: "no-store" }); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { existe = true; configurada = (await r.json()).ia === true; } } catch {}
+    $("caixa-ia").hidden = !existe;
+    if (!existe) return;
+    const senha = await AudisArmazem.lerAjuste("senha-ia").catch(() => null);
+    $("ia-remover").hidden = !senha;
+    $("ia-salvar").disabled = !configurada;
+    $("ia-estado").textContent = !configurada ? "Ainda não configurada no Vercel (faltam ANTHROPIC_API_KEY e AUDIS_SENHA)."
+      : senha ? "Ligada neste aparelho." : "Disponível. Falta a senha neste aparelho.";
+  }
+  $("ia-salvar").onclick = async () => {
+    const senha = $("ia-senha").value.trim();
+    if (!senha) return msg("Digite a senha da IA.", true);
+    $("ia-salvar").disabled = true; msg("Testando a senha com o Claude…");
+    try {
+      const r = await fetch("api/sample", { method: "POST", headers: { "content-type": "application/json", "x-audis-senha": senha },
+        body: JSON.stringify({ modelTier: "quick", turns: [{ role: "user", text: "Responda apenas com a palavra: ok" }] }) });
+      const out = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(out.message || "A IA não respondeu (" + r.status + ").");
+      await AudisArmazem.gravarAjuste("senha-ia", senha);
+      $("ia-senha").value = "";
+      msg("IA ligada neste aparelho. O Claude respondeu: " + String(out.text || "").trim().slice(0, 40));
+    } catch (e) { msg((e && e.message) || String(e), true); }
+    atualizarIA();
+  };
+  $("ia-remover").onclick = async () => { await AudisArmazem.gravarAjuste("senha-ia", null); msg("Senha removida deste aparelho."); atualizarIA(); };
+  atualizarIA();
 
   $("vazio").onclick = () => { localStorage.setItem("audis:comecar-vazio", "1"); location.href = "./"; };
   atualizar();

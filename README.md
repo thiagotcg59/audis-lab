@@ -73,17 +73,29 @@ AGENTS.md                 instruções para o agente do Antigravity
 
 Os arquivos de `src/` **não são módulos independentes**: são pedaços de um único arquivo, concatenados em ordem alfabética. Todos compartilham o mesmo escopo. Por isso um módulo pode chamar funções do núcleo (`W()`, `ot()`, `Z()`), e a ordem dos arquivos importa. Detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
 
-## Recursos com IA no modo local
+## Recursos com IA (API do Claude)
 
-No claude.ai, o Audis usa o Claude da sua conta. Fora de lá isso não existe, então o modo local precisa de uma chave de API.
+No claude.ai, o Audis usa o Claude da sua conta. Fora de lá, ele chama a API do Claude com uma chave sua. **A API é cobrada por uso**, separada da assinatura do claude.ai: crie a chave e ponha créditos em https://platform.claude.com.
 
-1. Copie `.env.example` para `.env`.
-2. Preencha `ANTHROPIC_API_KEY` (Claude) ou `GEMINI_API_KEY` (Gemini).
-3. Reinicie `npm run dev`.
+A conversa com a API fica em `ia/claude.mjs` (SDK oficial). O app pede três níveis, e cada um tem modelo e esforço próprios:
 
-Sem chave, o app funciona normalmente e esconde o que depende de IA (análise de questões coladas, correção de flashcards, classificação do Raio-X, leitura de imagens do Quadro, ajuste do plano).
+| Nível | Usado em | Padrão |
+|---|---|---|
+| rápido | corrigir flashcard, classificar erros | `claude-haiku-5-5`, esforço `low` |
+| padrão | análise de questão, leitura de imagem, plano, trilha | `claude-opus-5-5`, esforço `medium` |
+| complexo | análise "aprofundada" | `claude-opus-5-5`, esforço `high` |
 
-A ponte com as APIs foi testada só contra uma API simulada, não contra a Anthropic nem o Google de verdade. Confira os nomes dos modelos no `.env` antes de usar. Os prompts do app foram escritos e ajustados para o Claude; com o Gemini as respostas podem sair em formato um pouco diferente.
+Para gastar menos, troque o nível padrão para `claude-sonnet-5-5` (variáveis `AUDIS_MODELO_*` e `AUDIS_ESFORCO_*`, veja `.env.example`).
+
+**No computador:** copie `.env.example` para `.env`, preencha `ANTHROPIC_API_KEY`, rode `npm install` uma vez e reinicie `npm run dev`.
+
+**No celular (Vercel):** em vercel.com, no projeto, abra Settings › Environment Variables e crie `ANTHROPIC_API_KEY` (a chave) e `AUDIS_SENHA` (uma senha que você inventa). Faça um novo deploy (Deployments › ⋯ › Redeploy). No app, abra "Dados neste aparelho", digite a senha e toque em "Salvar e testar". A senha existe porque o endereço é público: sem ela, qualquer pessoa com o link gastaria os seus créditos. A chave nunca sai do servidor.
+
+No GitHub Pages não há servidor, então lá a IA não funciona.
+
+Sem chave, o app funciona normalmente e esconde o que depende de IA.
+
+A ponte foi testada contra uma API simulada (formato dos pedidos, rodadas com ferramentas, imagens, erros, senha). Ainda não rodou contra a API real: o primeiro uso com a sua chave é o teste. Imagens muito pesadas (acima de uns 3 MB) podem não passar pelo limite de envio do Vercel.
 
 ## Seus dados
 

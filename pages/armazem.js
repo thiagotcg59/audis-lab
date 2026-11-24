@@ -102,6 +102,30 @@
     },
   };
 
+  // Ajustes deste aparelho (hoje, só a senha da IA). Ficam num banco à parte para não entrarem no pacote de dados.
+  let ajustesAberto = null;
+  function abrirAjustes() {
+    if (!ajustesAberto) ajustesAberto = new Promise((ok, no) => {
+      const r = indexedDB.open("audis-ajustes", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("kv");
+      r.onsuccess = () => ok(r.result);
+      r.onerror = () => { ajustesAberto = null; no(r.error || new Error("IndexedDB indisponível")); };
+    });
+    return ajustesAberto;
+  }
+  async function ajuste(modo, fn) {
+    const db = await abrirAjustes();
+    return new Promise((ok, no) => {
+      const t = db.transaction("kv", modo); let saida;
+      const r = fn(t.objectStore("kv"));
+      if (r && "onsuccess" in r) r.onsuccess = () => { saida = r.result; };
+      t.oncomplete = () => ok(saida);
+      t.onerror = t.onabort = () => no(t.error);
+    });
+  }
+  Armazem.lerAjuste = chave => ajuste("readonly", s => s.get(chave));
+  Armazem.gravarAjuste = (chave, valor) => ajuste("readwrite", s => { valor === null || valor === "" ? s.delete(chave) : s.put(valor, chave); });
+
   function paraBase64(buf) {
     const b = new Uint8Array(buf); let s = "";
     for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));

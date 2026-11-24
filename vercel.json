@@ -1,9 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm install --no-save esbuild@0.24",
+  "installCommand": "npm install --omit=dev --no-save esbuild@0.24",
   "buildCommand": "node scripts/build-pages.mjs",
   "outputDirectory": "site",
+  "functions": {
+    "api/sample.js": { "maxDuration": 300 }
+  },
   "headers": [
     {
       "source": "/(sw.js|armazem.js|claude-shim.js|app.js|app.css|manifest.webmanifest)",

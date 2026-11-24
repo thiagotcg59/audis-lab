@@ -25,7 +25,7 @@ const DB = path.join(DADOS, 'db');
 const ASSETS = path.join(DADOS, 'assets');
 const IA = (process.env.AUDIS_IA || (process.env.ANTHROPIC_API_KEY ? 'anthropic' : process.env.GEMINI_API_KEY ? 'gemini' : '')).toLowerCase();
 const MODELOS = {
-  anthropic: { quick: process.env.AUDIS_MODELO_RAPIDO || 'claude-haiku-4-5', default: process.env.AUDIS_MODELO_PADRAO || 'claude-sonnet-4-5', complex: process.env.AUDIS_MODELO_COMPLEXO || 'claude-opus-4-5' },
+  anthropic: { quick: process.env.AUDIS_MODELO_RAPIDO || 'claude-haiku-5-5', default: process.env.AUDIS_MODELO_PADRAO || 'claude-opus-5-5', complex: process.env.AUDIS_MODELO_COMPLEXO || 'claude-opus-5-5' }, // os mesmos padrões de ia/claude.mjs
   gemini: { quick: process.env.AUDIS_MODELO_RAPIDO || 'gemini-2.5-flash', default: process.env.AUDIS_MODELO_PADRAO || 'gemini-2.5-flash', complex: process.env.AUDIS_MODELO_COMPLEXO || 'gemini-2.5-pro' },
 };
 const temIA = (IA === 'anthropic' && !!process.env.ANTHROPIC_API_KEY) || (IA === 'gemini' && !!process.env.GEMINI_API_KEY);
@@ -62,7 +62,6 @@ const arquivo = (res, f, tipo) => { if (!fs.existsSync(f)) return json(res, 404,
 
 // Converte a conversa neutra do simulador ({role:user|assistant|tool}) para a API escolhida.
 // Rodadas com ferramentas: a resposta traz "calls"; o navegador executa e manda os resultados na próxima rodada.
-const URL_ANTHROPIC = (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com').replace(/\/$/, '');
 const URL_GEMINI = (process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com').replace(/\/$/, '');
 const dataUrl = d => { const m = /^data:([^;]+);base64,(.*)$/s.exec(d || ''); return m ? { tipo: m[1], dados: m[2] } : null; };
 const comoTexto = v => (typeof v === 'string' ? v : JSON.stringify(v));
@@ -80,17 +79,11 @@ async function pedirIA({ turns, tools, modelTier }) {
   const modelo = (MODELOS[IA] || {})[modelTier] || (MODELOS[IA] || {}).default;
   const erro = (r, out, nome) => ({ status: r.status, code: r.status === 429 ? 'rate_limited' : r.status === 401 || r.status === 403 ? 'not_granted' : 'upstream_error', message: out?.error?.message || 'erro da API ' + nome });
   if (IA === 'anthropic') {
-    const messages = turns.map(t => t.role === 'tool'
-      ? { role: 'user', content: t.results.map(r => ({ type: 'tool_result', tool_use_id: r.id, content: comoTexto(r.output), is_error: !!r.isError })) }
-      : t.role === 'assistant'
-        ? { role: 'assistant', content: [...(t.text ? [{ type: 'text', text: t.text }] : []), ...(t.calls || []).map(c => ({ type: 'tool_use', id: c.id, name: c.name, input: c.input || {} }))] }
-        : { role: 'user', content: [...(t.images || []).map(dataUrl).filter(Boolean).map(x => ({ type: 'image', source: { type: 'base64', media_type: x.tipo, data: x.dados } })), { type: 'text', text: t.text || ' ' }] });
-    const body = { model: modelo, max_tokens: 8000, messages, ...(tools?.length ? { tools: tools.map(t => ({ name: t.name, description: t.description, input_schema: t.inputSchema })) } : {}) };
-    const r = await fetch(URL_ANTHROPIC + '/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify(body) });
-    const out = await r.json().catch(() => ({}));
-    if (!r.ok) throw erro(r, out, 'da Anthropic');
-    const blocos = out.content || [];
-    return { text: blocos.filter(c => c.type === 'text').map(c => c.text).join(''), calls: blocos.filter(c => c.type === 'tool_use').map(c => ({ id: c.id, name: c.name, input: c.input })), truncated: out.stop_reason === 'max_tokens' };
+    // A conversa com o Claude fica em ia/claude.mjs (SDK oficial), a mesma usada na versão publicada no Vercel.
+    let ponte;
+    try { ponte = await import('../ia/claude.mjs'); }
+    catch (e) { throw { status: 503, code: 'unavailable', message: 'Falta instalar as dependências da IA: rode "npm install" na pasta do projeto.' }; }
+    return ponte.pedirClaude({ turns, tools, modelTier });
   }
   if (IA === 'gemini') {
     const contents = turns.map(t => t.role === 'tool'
