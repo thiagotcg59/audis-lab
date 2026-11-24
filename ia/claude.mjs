@@ -12,7 +12,7 @@ import Anthropic from '@anthropic-ai/sdk';
 const env = process.env;
 export const NIVEIS = {
   quick: { model: env.AUDIS_MODELO_RAPIDO || 'claude-haiku-5-5', effort: env.AUDIS_ESFORCO_RAPIDO || 'low' },
-  default: { model: env.AUDIS_MODELO_PADRAO || 'claude-opus-5-5', effort: env.AUDIS_ESFORCO_PADRAO || 'medium' },
+  default: { model: env.AUDIS_MODELO_PADRAO || 'claude-sonnet-5-5', effort: env.AUDIS_ESFORCO_PADRAO || 'medium' },
   complex: { model: env.AUDIS_MODELO_COMPLEXO || 'claude-opus-5-5', effort: env.AUDIS_ESFORCO_COMPLEXO || 'high' },
 };
 export const iaConfigurada = () => !!env.ANTHROPIC_API_KEY;

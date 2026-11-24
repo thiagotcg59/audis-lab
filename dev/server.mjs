@@ -25,7 +25,7 @@ const DB = path.join(DADOS, 'db');
 const ASSETS = path.join(DADOS, 'assets');
 const IA = (process.env.AUDIS_IA || (process.env.ANTHROPIC_API_KEY ? 'anthropic' : process.env.GEMINI_API_KEY ? 'gemini' : '')).toLowerCase();
 const MODELOS = {
-  anthropic: { quick: process.env.AUDIS_MODELO_RAPIDO || 'claude-haiku-5-5', default: process.env.AUDIS_MODELO_PADRAO || 'claude-opus-5-5', complex: process.env.AUDIS_MODELO_COMPLEXO || 'claude-opus-5-5' }, // os mesmos padrões de ia/claude.mjs
+  anthropic: { quick: process.env.AUDIS_MODELO_RAPIDO || 'claude-haiku-5-5', default: process.env.AUDIS_MODELO_PADRAO || 'claude-sonnet-5-5', complex: process.env.AUDIS_MODELO_COMPLEXO || 'claude-opus-5-5' }, // os mesmos padrões de ia/claude.mjs
   gemini: { quick: process.env.AUDIS_MODELO_RAPIDO || 'gemini-2.5-flash', default: process.env.AUDIS_MODELO_PADRAO || 'gemini-2.5-flash', complex: process.env.AUDIS_MODELO_COMPLEXO || 'gemini-2.5-pro' },
 };
 const temIA = (IA === 'anthropic' && !!process.env.ANTHROPIC_API_KEY) || (IA === 'gemini' && !!process.env.GEMINI_API_KEY);
