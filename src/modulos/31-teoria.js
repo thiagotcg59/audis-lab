@@ -1027,7 +1027,10 @@
       falta = doc && !livre ? __teFalta(map, doc) : [],
       novos = falta.filter((b) => !caps.some((c) => c.rid === b.id)).length,
       stale = falta.length > 0,
-      lidos = ramos.filter((b) => (b.itens || []).length).length;
+      lidos = ramos.filter((b) => (b.itens || []).length).length,
+      titulo = (c) => (!livre && byId.get(c.rid)?.t) || c.t,
+      ouvir = __ovDaTeoria(caps, titulo),
+      nome = map.nome || "Teoria";
     return h(
       "main",
       { className: "page mp te" },
@@ -1087,6 +1090,7 @@
                       ? "Atualizar a teoria"
                       : "Reescrever a teoria",
             ),
+        h(__OVBtn, { tit: nome, pars: ouvir, className: "qd-btn" }, "Ouvir a teoria"),
       ),
       doc && caps.length ? h(__TEChat, { map, doc, busy }) : null,
       busy ? h("div", { className: "qd-reading", role: "status" }, h("span", { className: "qd-spin" }), busy) : null,
@@ -1168,8 +1172,14 @@
         return h(
           "section",
           { key: __teChave(c), id: "te-" + __teChave(c), className: "te-cap" },
-          h("div", { className: "chapter-number" }, "CAPÍTULO ", i + 1),
-          h("h2", null, (!livre && ramo?.t) || c.t),
+          h(
+            "div",
+            { className: "chapter-number" },
+            "CAPÍTULO ",
+            i + 1,
+            h(__OVBtn, { tit: nome, pars: ouvir, cap: i, className: "text-link ov-daqui" }, "ouvir a partir daqui"),
+          ),
+          h("h2", { id: "te-h-" + __teChave(c) }, titulo(c)),
           c.bl.map((b, j) => {
             // só entram os trechos que ainda existem no Material e nos subtemas do capítulo
             let gs = (b.g || []).map((x) => gm.get(x.s + "|" + x.p)).filter((g) => g && !vistos.has(g));
@@ -1180,12 +1190,17 @@
               b.k === "c"
                 ? h(
                     "p",
-                    { className: "te-comp" },
+                    { className: "te-comp", id: "te-b-" + __teChave(c) + "-" + j },
                     h("span", { className: "te-tag" }, "Complemento do Claude"),
                     b.nv ? h("span", { className: "te-tag nv" }, "Acrescentado em ", __mpBR(b.nv)) : null,
                     b.x,
                   )
-                : h("p", null, b.nv ? h("span", { className: "te-tag nv" }, "Acrescentado em ", __mpBR(b.nv)) : null, b.x),
+                : h(
+                    "p",
+                    { id: "te-b-" + __teChave(c) + "-" + j },
+                    b.nv ? h("span", { className: "te-tag nv" }, "Acrescentado em ", __mpBR(b.nv)) : null,
+                    b.x,
+                  ),
               gs.length
                 ? h(
                     "div",
@@ -1209,6 +1224,7 @@
             : h("p", { className: "meta" }, "Este ramo não existe mais no mapa."),
         );
       }),
+      h(__OVPlayer, null),
     );
   }
 
