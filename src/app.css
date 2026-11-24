@@ -8979,3 +8979,26 @@ b.mm-gap.done.n {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Mapas: arrastar as abas das páginas para mudar a ordem */
+.mp-tabs button[data-pg] {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.mp-tabs button.drag {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+.mp-tabs button.over {
+  outline: 2px dashed #35432e;
+  outline-offset: 2px;
+}
+.mp-tabs-hint {
+  margin: 8px 0 0;
+  color: #7c827d;
+  font:
+    12px/1.4 Arial,
+    sans-serif;
+}

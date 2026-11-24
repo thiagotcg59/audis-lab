@@ -928,6 +928,8 @@
       [lb, setLb] = __rdR.useState(!1),
       [view, setView] = __rdR.useState("pag"),
       fileRef = __rdR.useRef(null),
+      skipClick = __rdR.useRef(!1),
+      [drag, setDrag] = __rdR.useState(null),
       today = ot(new Date()),
       s = __mpStats(map),
       page = map.pags.find((p) => p.id === pid) || map.pags[0] || null,
@@ -983,6 +985,48 @@
         return { ...m, pags: L };
       });
     };
+    // Arrastar a aba de uma página (mouse ou dedo) e soltar sobre outra muda a ordem.
+    let moveTo = (fromId, toId) =>
+      __mpUpd(map.id, (m) => {
+        let L = [...m.pags],
+          i = L.findIndex((p) => p.id === fromId),
+          j = L.findIndex((p) => p.id === toId);
+        if (i < 0 || j < 0 || i === j) return m;
+        let [x] = L.splice(i, 1);
+        L.splice(j, 0, x);
+        return { ...m, pags: L };
+      });
+    let dragTab = (p) =>
+      map.pags.length < 2
+        ? {}
+        : {
+            "data-pg": p.id,
+            onPointerDown: (e) => {
+              skipClick.current = !1;
+              setDrag({ id: p.id, x: e.clientX, y: e.clientY, over: "", on: !1 });
+              try {
+                e.currentTarget.setPointerCapture(e.pointerId);
+              } catch {}
+            },
+            onPointerMove: (e) => {
+              if (!drag || drag.id !== p.id) return;
+              let on = drag.on || Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 8;
+              if (!on) return;
+              let el = document.elementFromPoint(e.clientX, e.clientY),
+                tab = el && el.closest ? el.closest("[data-pg]") : null,
+                over = tab ? tab.getAttribute("data-pg") : "";
+              (on !== drag.on || over !== drag.over) && setDrag({ ...drag, on, over });
+            },
+            onPointerUp: () => {
+              let d = drag;
+              setDrag(null);
+              if (d && d.on) {
+                skipClick.current = !0;
+                d.over && d.over !== d.id && moveTo(d.id, d.over);
+              }
+            },
+            onPointerCancel: () => setDrag(null),
+          };
     let delPage = () => {
       let p = page;
       __mpUpd(map.id, (m) => ({ ...m, pags: m.pags.filter((x) => x.id !== p.id) }));
@@ -1132,8 +1176,16 @@
               type: "button",
               role: "tab",
               "aria-selected": page?.id === p.id,
-              className: page?.id === p.id ? "on" : "",
+              className:
+                (page?.id === p.id ? "on" : "") +
+                (drag?.on && drag.id === p.id ? " drag" : "") +
+                (drag?.on && drag.over === p.id && drag.id !== p.id ? " over" : ""),
+              ...dragTab(p),
               onClick: () => {
+                if (skipClick.current) {
+                  skipClick.current = !1;
+                  return;
+                }
                 setPid(p.id);
                 setConf("");
               },
@@ -1159,6 +1211,9 @@
           },
         }),
       ),
+      view !== "banca" && map.pags.length > 1
+        ? h("p", { className: "mp-tabs-hint" }, "Para mudar a ordem, arraste uma página sobre outra ou use ◀ ▶.")
+        : null,
       view === "banca"
         ? null
         : page
