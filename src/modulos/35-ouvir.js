@@ -3,13 +3,55 @@
   // A fila é feita de frases curtas, porque alguns navegadores cortam falas longas; os parágrafos servem
   // para destacar o trecho na tela e para voltar/avançar. Pausar cancela a fala e guarda a posição
   // (o "pause" do navegador não funciona no Android).
-  // Preferências no aparelho: audis:ov { v: velocidade, voz: nome da voz }.
+  // Onde o servidor tem a chave da ElevenLabs (computador com .env, ou Vercel com a senha neste aparelho),
+  // a leitura pode usar a voz dela: o app pede o áudio de um parágrafo de cada vez em /__voz (ia/voz.mjs)
+  // e toca num <audio>. É pago por caractere; o áudio de cada parágrafo fica guardado enquanto a leitura
+  // está aberta, para não pedir duas vezes. Se o pedido falhar, a leitura segue com a voz do aparelho.
+  // No claude.ai não há /__voz (a página não acessa a internet): lá só existe a voz do aparelho.
+  // Preferências no aparelho: audis:ov { v: velocidade, voz: nome da voz, fonte: "el" | "ap" }.
   var __ovS = { on: !1, play: !1, tit: "", pars: [], fila: [], i: 0, gen: 0, dorme: 0, dormeMin: 0, tm: 0, err: "", fim: !1, listeners: new Set() };
   var __ovLSK = "audis:ov",
     __ovVels = [0.8, 1, 1.25, 1.5, 1.75, 2],
     __ovSonos = [0, 15, 30, 60];
-  function __ovOk() {
+  var __ovSrv = { ok: null, p: null, cache: new Map() };
+  var __ovMudo = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+  function __ovAp() {
     return typeof window != "undefined" && "speechSynthesis" in window && typeof window.SpeechSynthesisUtterance == "function";
+  }
+  function __ovOk() {
+    return __ovAp() || !!__ovSrv.ok;
+  }
+  // pergunta uma vez ao servidor se há voz da ElevenLabs
+  function __ovSrvInit() {
+    __ovSrv.p ||= fetch("/__config")
+      .then((r) => r.json())
+      .then((c) => (__ovSrv.ok = c?.voz === !0))
+      .catch(() => (__ovSrv.ok = !1))
+      .then(__ovEmit);
+  }
+  function __ovUsaEl() {
+    return !!__ovSrv.ok && !__ovS.semEl && (__ovCfg().fonte !== "ap" || !__ovAp());
+  }
+  function __ovAudio() {
+    return (__ovS.au ||= new Audio());
+  }
+  // áudio de um trecho pela ElevenLabs; devolve o endereço local do áudio
+  function __ovBusca(x) {
+    let c = __ovSrv.cache;
+    if (!c.has(x))
+      c.set(
+        x,
+        fetch("/__voz", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: x }) })
+          .then(async (r) => {
+            if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || "A voz da ElevenLabs não respondeu.");
+            return URL.createObjectURL(await r.blob());
+          })
+          .catch((e) => {
+            c.delete(x);
+            throw e;
+          }),
+      );
+    return c.get(x);
   }
   function __ovEmit() {
     __ovS.listeners.forEach((f) => {
@@ -21,9 +63,9 @@
   function __ovCfg() {
     try {
       let c = JSON.parse(__rdLS(__ovLSK, "null"));
-      return { v: __ovVels.includes(c?.v) ? c.v : 1, voz: typeof c?.voz == "string" ? c.voz : "" };
+      return { v: __ovVels.includes(c?.v) ? c.v : 1, voz: typeof c?.voz == "string" ? c.voz : "", fonte: c?.fonte === "ap" ? "ap" : "el" };
     } catch {
-      return { v: 1, voz: "" };
+      return { v: 1, voz: "", fonte: "el" };
     }
   }
   function __ovSetCfg(p) {
@@ -32,8 +74,7 @@
   // vozes em português do aparelho, as do Brasil primeiro
   function __ovVozes() {
     try {
-      return speechSynthesis
-        .getVoices()
+      return (__ovAp() ? speechSynthesis.getVoices() : [])
         .filter((v) => /^pt/i.test(v.lang))
         .sort((a, b) => /br/i.test(b.lang) - /br/i.test(a.lang) || a.name.localeCompare(b.name));
     } catch {
@@ -85,21 +126,106 @@
       ];
     });
   }
+  // trechos para a ElevenLabs: o parágrafo inteiro (a entonação fica melhor), partido só se for muito longo
+  function __ovPedacos(t) {
+    let out = [""];
+    for (let f of __ovFrases(t)) out.at(-1).length + f.length > 2000 ? out.push(f) : (out[out.length - 1] += (out.at(-1) ? " " : "") + f);
+    return out.filter(Boolean);
+  }
+  // monta a fila conforme a voz em uso e posiciona no começo do parágrafo p
+  function __ovMontar(p) {
+    let S = __ovS,
+      n = 0;
+    S.el = __ovUsaEl();
+    S.fila = S.pars.flatMap((q, pi) => (S.el ? __ovPedacos(q.x) : __ovFrases(q.x)).map((x) => ({ p: pi, x })));
+    S.fila.forEach((f) => ((f.a = n), (n += f.x.length)));
+    S.total = n;
+    S.auI = -1;
+    S.i = Math.max(0, S.fila.findIndex((f) => f.p >= p));
+  }
   function __ovAbrir(tit, pars, cap) {
     let S = __ovS;
     S.pars = pars;
-    S.fila = pars.flatMap((p, pi) => __ovFrases(p.x).map((x) => ({ p: pi, x })));
-    let n = 0;
-    S.fila.forEach((f) => ((f.a = n), (n += f.x.length)));
-    S.total = n;
     S.tit = tit;
     S.on = !0;
-    S.err = "";
-    S.fim = !1;
-    S.i = Math.max(0, cap ? S.fila.findIndex((f) => pars[f.p].cap === cap) : 0);
+    S.err = S.aviso = "";
+    S.fim = S.semEl = !1;
+    __ovMontar(Math.max(0, cap ? pars.findIndex((p) => p.cap === cap) : 0));
+    if (S.el) {
+      // libera o áudio dentro do toque do aluno (alguns celulares só tocam som iniciado por um toque)
+      let a = __ovAudio();
+      a.onended = a.onerror = null;
+      a.src = __ovMudo;
+      a.play().catch(() => {});
+    }
     __ovTocar();
   }
+  function __ovLigar(a, g) {
+    let S = __ovS;
+    a.onended = () => {
+      if (g !== S.gen) return;
+      S.i++;
+      __ovEmit();
+      __ovFalar();
+    };
+    a.onerror = () => g === S.gen && __ovSemEl("O áudio da ElevenLabs não tocou.");
+  }
+  // a ElevenLabs falhou: avisa e continua do mesmo parágrafo com a voz do aparelho
+  function __ovSemEl(motivo) {
+    let S = __ovS,
+      p = S.fila[S.i]?.p ?? 0;
+    S.carrega = !1;
+    S.semEl = !0;
+    __ovMontar(p);
+    if (__ovAp()) {
+      S.aviso = motivo + " A leitura segue com a voz do aparelho.";
+      S.play ? __ovFalar() : __ovEmit();
+    } else {
+      S.play = !1;
+      S.err = motivo;
+      __ovEmit();
+    }
+  }
+  function __ovFalarEl() {
+    let S = __ovS,
+      g = ++S.gen,
+      f = S.fila[S.i],
+      a = __ovAudio();
+    a.pause();
+    if (!f) {
+      S.play = S.carrega = !1;
+      S.fim = !0;
+      S.i = 0;
+      __ovEmit();
+      return;
+    }
+    let i = S.i;
+    S.carrega = !0;
+    __ovEmit();
+    __ovBusca(f.x)
+      .then((url) => {
+        if (g !== S.gen) return;
+        S.carrega = !1;
+        S.auI = i;
+        a.src = url;
+        a.playbackRate = __ovCfg().v;
+        __ovLigar(a, g);
+        __ovEmit();
+        return a.play();
+      })
+      .catch((e) => {
+        if (g !== S.gen) return;
+        if (e?.name === "NotAllowedError") {
+          S.play = S.carrega = !1;
+          S.err = "Toque em ouvir para começar.";
+          __ovEmit();
+        } else __ovSemEl((e && e.message) || "A voz da ElevenLabs não respondeu.");
+      });
+    // adianta o próximo trecho para não haver silêncio entre os parágrafos
+    S.fila[i + 1] && __ovBusca(S.fila[i + 1].x).catch(() => {});
+  }
   function __ovFalar() {
+    if (__ovS.el) return __ovFalarEl();
     let S = __ovS,
       g = ++S.gen,
       f = S.fila[S.i];
@@ -142,16 +268,25 @@
     __ovEmit();
   }
   function __ovTocar() {
-    __ovS.play = !0;
-    __ovS.err = "";
-    __ovS.fim = !1;
-    __ovFalar();
+    let S = __ovS;
+    S.play = !0;
+    S.err = "";
+    S.fim = !1;
+    if (S.el && S.auI === S.i && !__ovAudio().ended) {
+      // continua o áudio de onde parou
+      let a = __ovAudio();
+      __ovLigar(a, ++S.gen);
+      a.playbackRate = __ovCfg().v;
+      a.play().catch(() => {});
+      __ovEmit();
+    } else __ovFalar();
   }
   function __ovPausar() {
     __ovS.gen++;
-    __ovS.play = !1;
+    __ovS.play = __ovS.carrega = !1;
+    __ovS.au?.pause();
     try {
-      speechSynthesis.cancel();
+      __ovAp() && speechSynthesis.cancel();
     } catch {}
     __ovEmit();
   }
@@ -170,6 +305,10 @@
   function __ovVel() {
     let v = __ovCfg().v;
     __ovSetCfg({ v: __ovVels[(__ovVels.indexOf(v) + 1) % __ovVels.length] });
+    if (__ovS.el) {
+      __ovAudio().playbackRate = __ovCfg().v;
+      return __ovEmit();
+    }
     __ovS.play ? __ovFalar() : __ovEmit();
   }
   function __ovSono() {
@@ -190,13 +329,20 @@
     let S = __ovS;
     clearTimeout(S.tm);
     S.gen++;
-    S.on = S.play = !1;
+    S.on = S.play = S.carrega = !1;
     S.dorme = S.dormeMin = 0;
     S.pars = [];
     S.fila = [];
     S.i = 0;
+    if (S.au) {
+      S.au.pause();
+      S.au.onended = S.au.onerror = null;
+      S.au.removeAttribute("src");
+    }
+    __ovSrv.cache.forEach((u) => u.then((x) => URL.revokeObjectURL(x)).catch(() => {}));
+    __ovSrv.cache.clear();
     try {
-      __ovOk() && speechSynthesis.cancel();
+      __ovAp() && speechSynthesis.cancel();
     } catch {}
     __ovEmit();
   }
@@ -204,8 +350,9 @@
     let [, f] = __rdR.useReducer((x) => x + 1, 0);
     __rdR.useEffect(() => {
       __ovS.listeners.add(f);
+      __ovSrvInit();
       // as vozes chegam depois da página em alguns navegadores
-      let ok = __ovOk();
+      let ok = __ovAp();
       ok && speechSynthesis.addEventListener?.("voiceschanged", f);
       return () => {
         __ovS.listeners.delete(f);
@@ -285,7 +432,8 @@
         { className: "ov-bar", role: "progressbar", "aria-valuemin": 0, "aria-valuemax": 100, "aria-valuenow": Math.round(feito * 100) },
         h("i", { style: { width: feito * 100 + "%" } }),
       ),
-      h("span", { className: "ov-resta" }, S.err || resta),
+      h("span", { className: "ov-resta" }, S.err || (S.carrega ? "preparando a voz…" : resta)),
+      S.aviso ? h("span", { className: "ov-resta" }, S.aviso) : null,
       h(
         "div",
         { className: "ov-ctl" },
@@ -321,7 +469,7 @@
           S.dormeMin ? `para em ${S.dormeMin} min` : "sem hora de parar",
         ),
       ),
-      vozes.length > 1
+      vozes.length + (__ovSrv.ok ? 1 : 0) > 1
         ? h(
             "label",
             { className: "ov-voz" },
@@ -329,16 +477,23 @@
             h(
               "select",
               {
-                value: (vozes.find((v) => v.name === cfg.voz) || vozes[0]).name,
+                value: S.el ? "@el" : (vozes.find((v) => v.name === cfg.voz) || vozes[0]).name,
                 onChange: (e) => {
-                  __ovSetCfg({ voz: e.target.value });
+                  let v = e.target.value,
+                    p = S.fila[S.i]?.p ?? 0;
+                  v === "@el" ? __ovSetCfg({ fonte: "el" }) : __ovSetCfg({ fonte: "ap", voz: v });
+                  S.semEl = !1;
+                  S.aviso = "";
+                  S.au?.pause();
+                  __ovMontar(p);
                   S.play ? __ovFalar() : __ovEmit();
                 },
               },
-              vozes.map((v) => h("option", { key: v.name, value: v.name }, v.name)),
+              __ovSrv.ok ? h("option", { value: "@el" }, "ElevenLabs (paga por uso)") : null,
+              vozes.map((v) => h("option", { key: v.name, value: v.name }, v.name + (__ovSrv.ok ? " (do aparelho)" : ""))),
             ),
           )
-        : !vozes.length && speechSynthesis.getVoices().length
+        : !S.el && !vozes.length && speechSynthesis.getVoices().length
           ? h("span", { className: "ov-resta" }, "Este aparelho não tem voz em português instalada; a leitura pode sair com sotaque.")
           : null,
     );

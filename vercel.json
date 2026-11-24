@@ -5,7 +5,8 @@
   "buildCommand": "node scripts/build-pages.mjs",
   "outputDirectory": "site",
   "functions": {
-    "api/sample.js": { "maxDuration": 300 }
+    "api/sample.js": { "maxDuration": 300 },
+    "api/voz.js": { "maxDuration": 60 }
   },
   "headers": [
     {

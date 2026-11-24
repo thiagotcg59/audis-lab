@@ -59,9 +59,9 @@ input[type=password]{display:block;width:100%;font:inherit;padding:11px 12px;bor
   </div>
 
   <div class="caixa" id="caixa-ia" hidden>
-    <h2>Recursos com IA (Claude)</h2>
+    <h2>Recursos com IA (Claude) e voz (ElevenLabs)</h2>
     <p id="ia-estado">Verificando…</p>
-    <p class="sub">Análise de questões, correção de flashcards, Raio-X, leitura de imagens e ajuste do plano usam a API do Claude, paga por uso. Digite a senha que você definiu no Vercel para liberar neste aparelho.</p>
+    <p class="sub">Análise de questões, correção de flashcards, Raio-X, leitura de imagens e ajuste do plano usam a API do Claude, paga por uso. A leitura da Teoria com a voz da ElevenLabs também é paga por uso e usa a mesma senha. Digite a senha que você definiu no Vercel para liberar neste aparelho.</p>
     <input type="password" id="ia-senha" placeholder="Senha da IA" autocomplete="off">
     <button class="principal" id="ia-salvar">Salvar e testar</button>
     <button id="ia-remover" hidden>Remover a senha deste aparelho</button>
@@ -137,22 +137,33 @@ input[type=password]{display:block;width:100%;font:inherit;padding:11px 12px;bor
   };
 
   // IA: só aparece onde existem as funções de api/ (Vercel). No GitHub Pages a caixa fica escondida.
+  let temClaude = false, temVoz = false;
   async function atualizarIA() {
     let existe = false, configurada = false;
-    try { const r = await fetch("api/config", { cache: "no-store" }); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { existe = true; configurada = (await r.json()).ia === true; } } catch {}
+    try { const r = await fetch("api/config", { cache: "no-store" }); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { existe = true; const c = await r.json(); temClaude = c.ia === true; temVoz = c.voz === true; configurada = temClaude || temVoz; } } catch {}
     $("caixa-ia").hidden = !existe;
     if (!existe) return;
     const senha = await AudisArmazem.lerAjuste("senha-ia").catch(() => null);
     $("ia-remover").hidden = !senha;
     $("ia-salvar").disabled = !configurada;
-    $("ia-estado").textContent = !configurada ? "Ainda não configurada no Vercel (faltam ANTHROPIC_API_KEY e AUDIS_SENHA)."
-      : senha ? "Ligada neste aparelho." : "Disponível. Falta a senha neste aparelho.";
+    const quais = [temClaude ? "Claude" : "", temVoz ? "voz da ElevenLabs" : ""].filter(Boolean).join(" e ");
+    $("ia-estado").textContent = !configurada ? "Ainda não configurada no Vercel (falta AUDIS_SENHA e a chave: ANTHROPIC_API_KEY para o Claude; ELEVENLABS_API_KEY e ELEVENLABS_VOICE_ID para a voz)."
+      : senha ? "Ligado neste aparelho: " + quais + "." : "Disponível (" + quais + "). Falta a senha neste aparelho.";
   }
   $("ia-salvar").onclick = async () => {
     const senha = $("ia-senha").value.trim();
     if (!senha) return msg("Digite a senha da IA.", true);
-    $("ia-salvar").disabled = true; msg("Testando a senha com o Claude…");
+    $("ia-salvar").disabled = true; msg("Testando a senha…");
     try {
+      if (!temClaude) { // só a voz está configurada: confere a senha sem gastar caracteres
+        const r = await fetch("api/voz", { method: "POST", headers: { "content-type": "application/json", "x-audis-senha": senha }, body: JSON.stringify({ testar: true }) });
+        const out = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(out.message || "A voz não respondeu (" + r.status + ").");
+        await AudisArmazem.gravarAjuste("senha-ia", senha);
+        $("ia-senha").value = "";
+        msg("Voz da ElevenLabs ligada neste aparelho.");
+        return atualizarIA();
+      }
       const r = await fetch("api/sample", { method: "POST", headers: { "content-type": "application/json", "x-audis-senha": senha },
         body: JSON.stringify({ modelTier: "quick", turns: [{ role: "user", text: "Responda apenas com a palavra: ok" }] }) });
       const out = await r.json().catch(() => ({}));

@@ -8,6 +8,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { montarJs } from '../scripts/build.mjs';
+import { pedirVoz, vozConfigurada } from '../ia/voz.mjs';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = process.argv.includes('--dist'); // serve dist/ (o que vai ser publicado) em vez de montar src/ na hora
@@ -109,7 +110,7 @@ const servidor = http.createServer(async (req, res) => {
     if (req.method === 'GET' && p === '/dev/claude-shim.js') return arquivo(res, path.join(raiz, 'dev/claude-shim.js'), 'text/javascript; charset=utf-8');
     if (req.method === 'GET' && p === '/app.js') { if (DIST) return arquivo(res, path.join(raiz, 'dist/app.js'), 'text/javascript; charset=utf-8'); res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' }); return res.end(montarJs()); }
     if (req.method === 'GET' && p === '/app.css') return arquivo(res, path.join(raiz, DIST ? 'dist/app.css' : 'src/app.css'), 'text/css; charset=utf-8');
-    if (req.method === 'GET' && p === '/__config') return json(res, 200, { sample: temIA, images: temIA, ia: temIA ? IA : null, modelos: temIA ? MODELOS[IA] : null });
+    if (req.method === 'GET' && p === '/__config') return json(res, 200, { sample: temIA, images: temIA, ia: temIA ? IA : null, modelos: temIA ? MODELOS[IA] : null, voz: vozConfigurada() });
     if (req.method === 'GET' && p === '/__db') return json(res, 200, lerColecao(url.searchParams.get('c')));
     if (req.method === 'POST' && (p === '/__db/set' || p === '/__db/delete')) {
       const { path: doc, data } = JSON.parse((await corpo(req)).toString('utf8') || '{}');
@@ -135,6 +136,12 @@ const servidor = http.createServer(async (req, res) => {
       try { return json(res, 200, await pedirIA(JSON.parse((await corpo(req)).toString('utf8')))); }
       catch (e) { return json(res, e.status || 500, { code: e.code || 'upstream_error', message: e.message || String(e) }); }
     }
+    if (p === '/__voz' && req.method === 'POST') {
+      try {
+        const { tipo, dados } = await pedirVoz(JSON.parse((await corpo(req)).toString('utf8') || '{}'));
+        res.writeHead(200, { 'content-type': tipo, 'cache-control': 'no-store' }); return res.end(dados);
+      } catch (e) { return json(res, e.status >= 400 && e.status < 600 ? e.status : 500, { code: e.code || 'upstream_error', message: e.message || String(e) }); }
+    }
     return json(res, 404, { message: 'não encontrado: ' + p });
   } catch (e) {
     console.error(e); return json(res, 500, { code: 'upstream_error', message: String(e.message || e) });
@@ -143,5 +150,6 @@ const servidor = http.createServer(async (req, res) => {
 servidor.listen(PORT, '127.0.0.1', () => {
   console.log(`Audis Lab local: http://127.0.0.1:${PORT}${DIST ? '  (servindo dist/)' : ''}`);
   console.log(`Dados: ${DADOS}`);
+  console.log(vozConfigurada() ? 'Voz: ElevenLabs' : 'Voz: a do aparelho (sem ELEVENLABS_API_KEY e ELEVENLABS_VOICE_ID no .env).');
   console.log(temIA ? `IA: ${IA} (${MODELOS[IA].default})` : 'IA: desligada (sem chave no .env). Recursos com o Claude ficam escondidos.');
 });
