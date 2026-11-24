@@ -9514,3 +9514,37 @@ a.qd-btn {
     16px/1.4 Arial,
     sans-serif;
 }
+
+/* Mapas: faixa "Teoria desta página" (src/modulos/31-teoria.js, __TEPag) */
+.te-pag {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font:
+    14px/1.5 Arial,
+    sans-serif;
+}
+.te-pag.pend {
+  border-color: #e3d3a1;
+  background: #fbf8ee;
+}
+.te-pag p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.te-pag-ok {
+  color: #35432e;
+  font-weight: 600;
+}
+.te-pag .mm-btns {
+  align-items: center;
+}
+.te-tag.nv {
+  background: #dfe9d6;
+  color: #35432e;
+}

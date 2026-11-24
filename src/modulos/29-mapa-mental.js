@@ -1289,6 +1289,7 @@
                     ),
               ),
             ),
+            h(__TEPag, { map, page }),
             h(
               "div",
               { className: "mp-grid show-" + side },
