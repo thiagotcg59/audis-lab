@@ -9110,3 +9110,32 @@ a.qd-btn {
     font-size: 16px;
   }
 }
+
+/* Teoria: trechos marcados logo depois do parágrafo, e subtemas achados pelo Claude */
+.te-ja {
+  margin: -4px 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font:
+    14px/1.5 Arial,
+    sans-serif;
+}
+.te-ja .mp-grifos {
+  border-left: 3px solid #8c9980;
+  border-radius: 0 10px 10px 0;
+}
+.te-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 10px;
+}
+.te-sub button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  font-size: 12px;
+}
