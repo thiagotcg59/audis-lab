@@ -68,6 +68,7 @@ O resultado é **um único arquivo dentro de uma função** (`(() => { ... })()`
 | `/material` | `t0` | `?topico=<id>`, `?subtema=<chave>`, `?trilha=1`, `?quadro=1` |
 | `/erros` | `__RXW` | abas: caderno (`a0`) e Raio-X (`__RX`, com `?aba=raiox`); `?treinar=<tipo>&n=<qtd>` abre o treino |
 | `/flashcards` | `__FC` | |
+| `/mapas` | `__MP` | `?m=<id>` abre um mapa |
 | `/professor` | `i0` | `?questao=<id>` |
 | `/desempenho` | `c0` | |
 | `/conquistas` | `__CQ` | |
@@ -148,8 +149,9 @@ A classe `sh` divide o acervo em **páginas** na coleção `pages`. Cada documen
 |---|---|---|
 | `fcards` | `srs` (agenda de cada card: `d` próxima data, `i` intervalo, `n` vezes, `r` resultado `u`/`p`/`n`, `t` quando), `q0`…`q7` (perguntas geradas pelo Claude) | Flashcards |
 | `rxerr` | `types` (tipo de cada erro: `t`, e o par `a`/`b` quando é confusão), `pairs` (quadros comparativos) | Raio-X |
-| `quadro` | um documento por imagem: `sid` (seção), `asset`, `title`, `o` (ordem), `q`/`qn`/`qb` (questão), `read` (leitura do Claude), `fc` (virou flashcard), `mapa` (transcrição como mapa mental: `ramos[].itens[].x` com as lacunas entre `{{ }}`), `mst` (última resposta de cada lacuna, `y`/`n`), `mat` (último treino) | Quadro |
+| `quadro` | um documento por imagem: `sid` (seção), `asset`, `title`, `o` (ordem), `q`/`qn`/`qb` (questão), `read` (leitura do Claude), `fc` (virou flashcard) | Quadro |
 | `quadroimg` | imagem em base64, só quando o envio de arquivos não está disponível | Quadro |
+| `mapas` | um documento por mapa: `nome`, `disc`, `srs` (`s` degrau, `d` próxima data, `t` último treino, `r` % lembrado), `pags` (cada página: `id`, `asset` ou `dbimg`, `titulo`, `ramos[].itens[]` com `id`, `x` e as lacunas entre `{{ }}`, `m` selo; `mst` com a última resposta de cada lacuna, chave `<id do item>\|<nº>`). A imagem de uma página sem `asset` fica em `quadroimg/<id da página>` | Mapas |
 | `plano` | `config` (minutos padrão por dia), `w-AAAA-MM-DD` (uma semana, pela segunda-feira): `mins`, `blocks`, `reasons`, `claude` | Plano da semana |
 
 ### Preferências no navegador (`localStorage`)
@@ -170,13 +172,13 @@ Cada módulo usa um prefixo próprio. Funções com letra minúscula depois de `
 | `25-raio-x-dos-erros.js` | `__rx` | classificação dos erros (regras e Claude), pares confundidos, treino (`__RXTrain`), tela `__RX`, abas `__RXW` |
 | `26-quadro-do-topico.js` | `__qd` | guarda e lê imagens, leitura pelo Claude, mural e detalhe (`__QD`), alfinete na árvore (`__QDPin`) |
 | `27-plano-da-semana.js` | `__pl` | gerador do plano (`__plGen`), progresso automático (`__plProg`), ajuste pelo Claude, tela `__PL`, abas `__PLW`; no fim, `__rxAuto` (abre o treino do Raio-X pela URL) |
-| `29-mapa-mental.js` | `__mm` | leitura de uma imagem do Quadro como mapa mental (`__mmRead`), lacunas (`__mmParts`, `__mmGaps`), treino (`__MMStudy`), bloco no detalhe da imagem (`__MMPanel`) e faixa do tópico (`__MMBar`). Usa o armazenamento do Quadro (`__qdStore`, `__qdPut`) |
+| `29-mapa-mental.js` | `__mp` | área Mapas: armazenamento próprio (`__mpStore`, `__mpPut`), leitura de uma página pelo Claude (`__mpReadPage`), lacunas (`__mpParts`, `__mpGaps`, `__mpBuild`), agenda (`__mpSched`), migração do que foi lido no Quadro (`__mpMigrate`); telas `__MP` (lista), `__MPMap` (um mapa), `__MPRamos` e `__MPItemEdit` (correção), `__MPStudy` (treino), `__MPBadge` (contador do menu). As imagens usam as funções do Quadro (`__qdPrep`, `__qdStoreImg`, `__qdSrc`) |
 | `28-material-unico-do-subtema.js` | `__SBV` | leitura de um subtema inteiro; é o único módulo escrito no estilo do compilador |
 
 Pontos em que o núcleo foi alterado para encaixar os módulos (procure pelo nome):
 
-- Rotas em `wM` (`90-nucleo-2.js`): `__PLW`, `__RXW`, `__RDR`, `__FC`, `__CQ`.
-- Menu lateral (`10-nucleo-1.js`): itens Flashcards, Conquistas e Radar, com os ícones `__fcIcon`, `__cqIcon`, `__rdIcon`, e o contador `__fcBadge`.
+- Rotas em `wM` (`90-nucleo-2.js`): `__PLW`, `__RXW`, `__RDR`, `__FC`, `__CQ`, `__MP`.
+- Menu lateral (`10-nucleo-1.js`): itens Flashcards, Mapas, Conquistas e Radar, com os ícones `__fcIcon`, `__mpIcon`, `__cqIcon`, `__rdIcon`, e os contadores `__fcBadge` e `__MPBadge`.
 - Tela Material (`t0`): aba "Quadro" (`__QDTab`, `__QD`), barra `__UTB`, botão "Material único do subtema" (`__sbOpen`, `__SBV`).
 - Árvore do material (`DO`): alfinete `__QDPin`.
 - Flashcards (`__fcCards`, `__FCCard`): cards vindos do Quadro (`__qdFcAdd`, `__QDFcBack`).
@@ -194,7 +196,7 @@ Todas usam `sample(...)` ou `sample.json(...)`, com `modelTier` `quick`, `defaul
 | Flashcards: gerar perguntas / corrigir resposta | `__fcGen` / `__fcGrade` | `default` / `quick` |
 | Raio-X: classificar erros / quadro comparativo | `__rxClassify` / `__rxCompare` | `quick` / `default` |
 | Quadro: ler imagem e comparar com o material | `__qdRead` | `default`, com imagem |
-| Mapa mental: transcrever a imagem em ramos e lacunas | `__mmRead` | `default`, com imagem |
+| Mapas: transcrever a página em ramos e lacunas | `__mpReadPage` | `default`, com imagem |
 | Plano: ajustar por pedido em texto | `adjust` dentro de `__PL` | `default` |
 
 Os prompts tratam o texto do aluno e das questões como dado, pedem JSON e validam a resposta antes de salvar.

@@ -21936,6 +21936,13 @@ ${JSON.stringify(t, null, 2)}`;
     ["circle", { cx: "12", cy: "12", r: "2", key: "rd7" }],
     ["path", { d: "m13.41 10.59 5.66-5.66", key: "rd8" }],
   ]);
+  var __mpIcon = G("Network", [
+    ["rect", { x: "16", y: "16", width: "6", height: "6", rx: "1", key: "mp1" }],
+    ["rect", { x: "2", y: "16", width: "6", height: "6", rx: "1", key: "mp2" }],
+    ["rect", { x: "9", y: "2", width: "6", height: "6", rx: "1", key: "mp3" }],
+    ["path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3", key: "mp4" }],
+    ["path", { d: "M12 12V8", key: "mp5" }],
+  ]);
   var be = U(X()),
     tO = [
       { label: "Hoje", href: "/", icon: Ad },
@@ -21943,6 +21950,7 @@ ${JSON.stringify(t, null, 2)}`;
       { label: "Material", href: "/material", icon: Ln },
       { label: "Erros", href: "/erros", icon: _n },
       { label: "Flashcards", href: "/flashcards", icon: __fcIcon },
+      { label: "Mapas", href: "/mapas", icon: __mpIcon },
       { label: "Professor", href: "/professor", icon: Oo },
       { label: "Desempenho", href: "/desempenho", icon: vd },
       { label: "Conquistas", href: "/conquistas", icon: __cqIcon },
@@ -21992,6 +22000,7 @@ ${JSON.stringify(t, null, 2)}`;
                           title: "Cards para hoje",
                           children: __fcBadge(n),
                         }),
+                      o === "Mapas" && (0, be.jsx)(__MPBadge, {}),
                       o === "Conquistas" &&
                         __cqTodayN(n) > 0 &&
                         (0, be.jsx)("small", {

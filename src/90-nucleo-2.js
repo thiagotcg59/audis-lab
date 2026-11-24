@@ -5097,6 +5097,7 @@ C) Terceira alternativa`,
       "/desempenho": () => (0, Qa.jsx)(c0, {}),
       "/radar": () => (0, Qa.jsx)(__RDR, {}),
       "/flashcards": () => (0, Qa.jsx)(__FC, {}),
+      "/mapas": () => (0, Qa.jsx)(__MP, {}),
       "/conquistas": () => (0, Qa.jsx)(__CQ, {}),
       "/adicionar": () => (0, Qa.jsx)(g0, {}),
     };

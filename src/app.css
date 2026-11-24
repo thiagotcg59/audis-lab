@@ -8161,29 +8161,7 @@ td.rd-h5 {
   }
 }
 
-/* Mapa mental (módulo 29): bloco no Quadro e treino de lacunas */
-.mm-panel {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-start;
-}
-.mm-panel > * {
-  max-width: 100%;
-}
-.mm-sum {
-  margin: 0;
-  font-size: 14px;
-}
-.mm-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.mm-chips span,
+/* Mapas mentais (módulo 29): treino de lacunas */
 .mm-branch {
   font:
     700 11px Arial,
@@ -8203,34 +8181,6 @@ td.rd-h5 {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-}
-.mm-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  align-items: center;
-  justify-content: space-between;
-  background: #eef2ec;
-  border: 1px solid #dfe6dc;
-  border-radius: 12px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-}
-.mm-bar > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.mm-tx {
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: #f8faf7;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 14px;
 }
 .mm-items {
   list-style: none;
@@ -8428,10 +8378,294 @@ b.mm-gap.done.n {
     border-radius: 0;
     width: 100%;
   }
-  .mm-bar .mm-btns,
-  .mm-bar .mm-btns .qd-btn {
-    width: 100%;
-    justify-content: center;
-    white-space: normal;
+}
+
+/* Mapas mentais (módulo 29): telas */
+.mp-back {
+  display: inline-block;
+  margin-bottom: 14px;
+}
+.mp-add,
+.mp-acts {
+  margin-top: 22px;
+}
+.mp-new {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  max-width: 640px;
+}
+.mp-new label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 0;
+}
+.mp-new input,
+.mp-edit textarea,
+.mp-edit select {
+  border: 1px solid #cfd5c7;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font:
+    15px Arial,
+    sans-serif;
+  color: var(--ink);
+  background: #fff;
+  width: 100%;
+}
+.mp-new .mm-btns {
+  grid-column: 1 / -1;
+}
+.mp-sec {
+  margin-top: 30px;
+}
+.mp-sec > .small-label {
+  display: block;
+  margin-bottom: 10px;
+}
+.mp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+.mp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #dfe4dc;
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--ink);
+  text-decoration: none;
+  min-width: 0;
+}
+.mp-card:hover {
+  border-color: #8fa27f;
+}
+.mp-card.due {
+  border-color: #516a43;
+}
+.mp-card b {
+  font: 400 19px/1.25 var(--serif);
+  overflow-wrap: anywhere;
+}
+.mp-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.mp-bar i {
+  display: block;
+  height: 100%;
+  background: #516a43;
+}
+.mp-when {
+  font-size: 12px;
+  color: var(--muted);
+}
+.mp-when.due {
+  color: #35432e;
+  font-weight: 700;
+}
+.mp-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 26px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+.mp-tabs button,
+.mp-switch button {
+  border: 1px solid #cfd5c7;
+  background: #fff;
+  color: #35432e;
+  border-radius: 999px;
+  padding: 7px 13px;
+  font:
+    600 13px Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.mp-tabs button.on,
+.mp-switch button.on {
+  background: #35432e;
+  border-color: #35432e;
+  color: #fff;
+}
+.mp-tabs button.add {
+  border-style: dashed;
+}
+.mp-tabs button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.mp-page {
+  margin-top: 14px;
+}
+.mp-page-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.mp-switch {
+  display: none;
+  gap: 6px;
+}
+.mp-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.mp-img {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 6px;
+  cursor: zoom-in;
+  position: sticky;
+  top: 12px;
+  min-width: 0;
+}
+.mp-img img {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+}
+.mp-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.mp-side > * {
+  max-width: 100%;
+}
+.mp-ramos {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+.mp-ramos-top {
+  align-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+}
+.mp-ramo {
+  align-self: stretch;
+}
+.mp-ramo-h {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.mp-ramo > .text-link {
+  margin-top: 8px;
+}
+.mp-li-btn {
+  margin-left: 8px;
+  font-size: 13px;
+}
+.mm-items li.mp-li-ed {
+  padding-left: 0;
+}
+.mm-items li.mp-li-ed::before {
+  display: none;
+}
+.mp-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f8faf7;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+}
+.mp-edit textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.mp-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mp-words button {
+  border: 1px solid #cfd5c7;
+  background: #fff;
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font:
+    14px Arial,
+    sans-serif;
+  cursor: pointer;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.mp-words button.on {
+  background: #35432e;
+  border-color: #35432e;
+  color: #fff;
+  font-weight: 700;
+}
+.mp-edit-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.mp-edit-mark select {
+  width: auto;
+  padding: 6px 9px;
+  font-size: 14px;
+}
+.mp-del {
+  color: #b8451a;
+}
+.mp-foot {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 860px) {
+  .mp-switch {
+    display: flex;
+  }
+  .mp-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mp-grid.show-ramos .mp-img,
+  .mp-grid.show-img .mp-side {
+    display: none;
+  }
+  .mp-img {
+    position: static;
+  }
+  .mp-new {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
