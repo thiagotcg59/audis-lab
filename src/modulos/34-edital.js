@@ -129,10 +129,35 @@
               ),
             ),
             !vis.length ? h("p", { className: "meta ed-vazio" }, "Nenhum assunto neste filtro.") : null,
+            vis.length > 1
+              ? h(
+                  "nav",
+                  { className: "ed-indice", "aria-label": "Disciplinas do edital" },
+                  h("span", { className: "small-label" }, "DISCIPLINAS"),
+                  h(
+                    "div",
+                    null,
+                    vis.map(({ d, i, itens, comT }) =>
+                      h(
+                        "button",
+                        {
+                          key: d.id,
+                          type: "button",
+                          style: { "--ci": __ciCor(i) },
+                          onClick: () => document.getElementById("ed-d-" + d.id)?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                        },
+                        h("i", null),
+                        h("span", null, d.n),
+                        itens.length ? h("small", null, comT, "/", itens.length) : null,
+                      ),
+                    ),
+                  ),
+                )
+              : null,
             vis.map(({ d, i, itens, comT, L }) =>
               h(
                 "section",
-                { key: d.id, className: "ed-disc", style: { "--ci": __ciCor(i) } },
+                { key: d.id, id: "ed-d-" + d.id, className: "ed-disc", style: { "--ci": __ciCor(i) } },
                 h(
                   "header",
                   null,
