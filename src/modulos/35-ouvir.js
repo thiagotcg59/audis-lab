@@ -73,6 +73,9 @@
     let r = await fetch("/__voz", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: x }) });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || "A voz da ElevenLabs não respondeu.");
     let b = await r.blob();
+    // só aqui há gasto: o leitor mostra quantos caracteres foram pedidos nesta leitura
+    __ovS.pedidos = (__ovS.pedidos || 0) + x.length;
+    __ovEmit();
     if (g && b.size)
       try {
         await g.put(k, new Response(b, { headers: { "content-type": b.type || "audio/mpeg" } }));
@@ -194,11 +197,12 @@
     S.on = !0;
     S.err = S.aviso = "";
     S.fim = S.semEl = !1;
+    S.pedidos = 0;
     __ovMontar(Math.max(0, cap ? pars.findIndex((p) => p.cap === cap) : 0));
     if (S.el) {
       // libera o áudio dentro do toque do aluno (alguns celulares só tocam som iniciado por um toque)
       let a = __ovAudio();
-      a.onended = a.onerror = null;
+      a.onended = a.onerror = a.ontimeupdate = null;
       a.src = __ovMudo;
       a.play().catch(() => {});
     }
@@ -213,6 +217,13 @@
       __ovFalar();
     };
     a.onerror = () => g === S.gen && __ovSemEl("O áudio da ElevenLabs não tocou.");
+    // adianta o próximo trecho só quando o atual está acabando: parar no meio não paga por um parágrafo não ouvido
+    let i = S.i;
+    a.ontimeupdate = () => {
+      if (g !== S.gen || !(a.duration > 0) || (a.duration - a.currentTime) / (a.playbackRate || 1) > 12) return;
+      a.ontimeupdate = null;
+      S.fila[i + 1] && __ovBusca(S.fila[i + 1].x).catch(() => {});
+    };
   }
   // a ElevenLabs falhou: avisa e continua do mesmo parágrafo com a voz do aparelho
   function __ovSemEl(motivo) {
@@ -265,8 +276,6 @@
           __ovEmit();
         } else __ovSemEl((e && e.message) || "A voz da ElevenLabs não respondeu.");
       });
-    // adianta o próximo trecho para não haver silêncio entre os parágrafos
-    S.fila[i + 1] && __ovBusca(S.fila[i + 1].x).catch(() => {});
   }
   function __ovFalar() {
     if (__ovS.el) return __ovFalarEl();
@@ -339,11 +348,13 @@
     let S = __ovS,
       p = S.fila[S.i]?.p ?? 0,
       ini = S.fila.findIndex((f) => f.p === p),
-      alvo = d < 0 ? (S.i > ini ? p : p - 1) : p + 1,
+      meio = S.i > ini || (S.el && S.auI === S.i && S.au?.currentTime > 3),
+      alvo = d < 0 ? (meio ? p : p - 1) : p + 1,
       k = S.fila.findIndex((f) => f.p >= alvo);
     if (d > 0 && k < 0) return;
     S.i = Math.max(0, k);
     S.fim = !1;
+    S.auI = -1;
     S.play ? __ovFalar() : __ovEmit();
   }
   function __ovVel() {
@@ -380,7 +391,7 @@
     S.i = 0;
     if (S.au) {
       S.au.pause();
-      S.au.onended = S.au.onerror = null;
+      S.au.onended = S.au.onerror = S.au.ontimeupdate = null;
       S.au.removeAttribute("src");
     }
     __ovSrv.cache.forEach((u) => u.then((x) => URL.revokeObjectURL(x)).catch(() => {}));
@@ -478,6 +489,15 @@
       ),
       h("span", { className: "ov-resta" }, S.err || (S.carrega ? "preparando a voz…" : resta)),
       S.aviso ? h("span", { className: "ov-resta" }, S.aviso) : null,
+      S.el && !S.carrega
+        ? h(
+            "span",
+            { className: "ov-resta" },
+            S.pedidos
+              ? `ElevenLabs nesta leitura: ${S.pedidos.toLocaleString("pt-BR")} caracteres novos. O que já foi ouvido não gasta.`
+              : "ElevenLabs nesta leitura: nada novo pedido, o áudio veio do aparelho.",
+          )
+        : null,
       h(
         "div",
         { className: "ov-ctl" },

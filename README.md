@@ -102,7 +102,7 @@ No GitHub Pages não há servidor, então lá a IA não funciona.
 
 **No computador:** ponha as duas no `.env` e reinicie `npm run dev`. **No Vercel:** crie as duas em Settings › Environment Variables, junto com `AUDIS_SENHA` (a mesma senha da IA; não precisa ter a chave do Claude), faça um novo deploy e, no app, digite a senha em "Dados neste aparelho". No leitor, o campo "Voz" passa a oferecer "ElevenLabs"; dá para voltar à voz do aparelho ali mesmo. No GitHub Pages e no claude.ai só existe a voz do aparelho.
 
-O app pede o áudio de um parágrafo por vez (e adianta o seguinte) e guarda cada um no navegador do aparelho: ouvir de novo o mesmo texto, com a mesma voz e o mesmo modelo, não gasta nada. O que fica guardado vale só para aquele aparelho e some se os dados do site forem limpos; se o texto de um parágrafo mudar, só ele é pedido de novo. A ponte (`ia/voz.mjs`) foi testada contra uma ElevenLabs simulada; o primeiro uso com a sua chave é o teste real.
+O app pede o áudio de um parágrafo por vez (o seguinte só é pedido quando o atual está acabando) e guarda cada um no navegador do aparelho: ouvir de novo o mesmo texto, com a mesma voz e o mesmo modelo, não gasta nada; o leitor mostra quantos caracteres novos foram pedidos na leitura. O que fica guardado vale só para aquele aparelho e some se os dados do site forem limpos; se o texto de um parágrafo mudar, só ele é pedido de novo. A ponte (`ia/voz.mjs`) foi testada contra uma ElevenLabs simulada; o primeiro uso com a sua chave é o teste real.
 
 Sem chave, o app funciona normalmente e esconde o que depende de IA.
 
