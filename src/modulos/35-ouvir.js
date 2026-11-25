@@ -85,6 +85,26 @@
       } catch {}
     return b;
   }
+  // quais destes parágrafos ({ id, x }) já têm áudio da ElevenLabs guardado neste aparelho: devolve os ids.
+  // A Teoria usa para não reescrever texto que já foi pago (texto novo = áudio pedido de novo).
+  async function __ovGuardadosDe(pars) {
+    let out = new Set();
+    try {
+      __ovSrvInit();
+      await __ovSrv.p;
+      if (!__ovSrv.ok || typeof caches == "undefined" || !pars.length) return out;
+      let g = await caches.open(__ovGuarda),
+        tem = new Set((await g.keys()).map((r) => new URL(r.url).pathname));
+      if (!tem.size) return out;
+      for (let p of pars)
+        for (let x of __ovPedacos(p.x))
+          if (tem.has(await __ovGuardaChave(x)) || (__ovSrv.chave && tem.has(await __ovGuardaChave(x, "")))) {
+            out.add(p.id);
+            break;
+          }
+    } catch {}
+    return out;
+  }
   // devolve o endereço local do áudio de um trecho (um pedido por trecho enquanto a leitura está aberta)
   function __ovBusca(x) {
     let c = __ovSrv.cache;
@@ -163,13 +183,17 @@
     }
     return out;
   }
+  // o que é lido de um bloco da Teoria (é deste texto que sai a chave do áudio guardado)
+  function __ovTextoBloco(b) {
+    return (b.k === "c" ? "Complemento. " : "") + b.x;
+  }
   // parágrafos da Teoria: o título de cada capítulo e os seus blocos. Os ids são os dos elementos na tela.
   function __ovDaTeoria(caps, titulo) {
     return caps.flatMap((c, i) => {
       let k = __teChave(c);
       return [
         { id: "te-h-" + k, cap: i, x: `Capítulo ${i + 1}. ${titulo(c)}.` },
-        ...c.bl.map((b, j) => ({ id: "te-b-" + k + "-" + j, cap: i, x: (b.k === "c" ? "Complemento. " : "") + b.x })),
+        ...c.bl.map((b, j) => ({ id: "te-b-" + k + "-" + j, cap: i, x: __ovTextoBloco(b) })),
       ];
     });
   }
