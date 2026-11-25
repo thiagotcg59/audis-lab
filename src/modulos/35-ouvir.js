@@ -153,6 +153,124 @@
         : h("p", { className: "meta" }, "Conta o tempo com a leitura em voz alta tocando. Ainda não há nada nos últimos 7 dias."),
     );
   }
+  // gráfico "Minutos ouvidos por dia" (tela Hoje): uma barra por dia, nos últimos 7, 30 ou 90 dias.
+  // Tocar ou passar o mouse numa barra mostra o dia e o tempo. O período escolhido fica em audis:ov-graf.
+  function __OVGraf() {
+    __ovUse();
+    let h = __rdR.createElement,
+      [n, setN] = __rdR.useState(() => {
+        let v = Number(__rdLS("audis:ov-graf", "7"));
+        return [7, 30, 90].includes(v) ? v : 7;
+      }),
+      [sel, setSel] = __rdR.useState(-1),
+      sem = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"],
+      dias = Array.from({ length: n }, (_, i) => {
+        let d = new Date();
+        d.setDate(d.getDate() - (n - 1 - i));
+        let k = ot(d);
+        return { k, s: Object.values(__ovT.dias[k] || {}).reduce((a, b) => a + b, 0), r: `${sem[d.getDay()]}, ${__mpBR(k)}` };
+      }),
+      total = dias.reduce((a, d) => a + d.s, 0),
+      com = dias.filter((d) => d.s >= 1).length;
+    if (!total && !Object.keys(__ovT.dias).length && !__ovOk()) return null;
+    // topo da escala: um número redondo de minutos acima do maior dia
+    let maxMin = Math.max(...dias.map((d) => d.s)) / 60,
+      topo = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240, 360, 480, 720, 1440].find((v) => v >= maxMin) || 1440,
+      marcas = n === 7 ? dias.map((_, i) => i) : [0, Math.floor((n - 1) / 3), Math.floor(((n - 1) * 2) / 3), n - 1],
+      foco = sel >= 0 && sel < n ? dias[sel] : null,
+      eixo = (v) => (v < 60 ? String(v).replace(".", ",") + " min" : v % 60 ? (v / 60).toFixed(1).replace(".", ",") + " h" : v / 60 + " h");
+    return h(
+      "section",
+      { className: "ov-g" },
+      h(
+        "div",
+        { className: "ov-g-top" },
+        h("div", null, h("span", { className: "small-label" }, "ÁUDIO"), h("h2", null, "Minutos ouvidos por dia")),
+        h(
+          "div",
+          { className: "ed-filtro", role: "group", "aria-label": "Período do gráfico" },
+          [7, 30, 90].map((v) =>
+            h(
+              "button",
+              {
+                key: v,
+                type: "button",
+                className: n === v ? "on" : "",
+                "aria-pressed": n === v,
+                onClick: () => {
+                  setN(v);
+                  setSel(-1);
+                  __rdSS("audis:ov-graf", String(v));
+                },
+              },
+              v + " dias",
+            ),
+          ),
+        ),
+      ),
+      h(
+        "p",
+        { className: "ov-g-res", role: "status" },
+        foco
+          ? h(__rdR.Fragment, null, h("b", null, __ovTMin(foco.s)), " · ", foco.r)
+          : h(
+              __rdR.Fragment,
+              null,
+              h("b", null, __ovTMin(total)),
+              ` nos últimos ${n} dias`,
+              com ? ` · ${com} ${com === 1 ? "dia com áudio" : "dias com áudio"} · média de ${__ovTMin(total / n)} por dia` : "",
+            ),
+      ),
+      h(
+        "div",
+        { className: "ov-g-area", "aria-hidden": !0 },
+        h("div", { className: "ov-g-eixo" }, h("span", null, eixo(topo)), h("span", null, eixo(topo / 2)), h("span", null, "0")),
+        h(
+          "div",
+          { className: "ov-g-plot n" + n, onMouseLeave: () => setSel(-1) },
+          dias.map((d, i) =>
+            h(
+              "button",
+              {
+                key: d.k,
+                type: "button",
+                tabIndex: -1,
+                className: i === sel ? "on" : "",
+                title: `${d.r}: ${__ovTMin(d.s)}`,
+                onMouseEnter: () => setSel(i),
+                onClick: () => setSel(i === sel ? -1 : i),
+              },
+              d.s >= 1 ? h("i", { style: { height: Math.max(2, (d.s / 60 / topo) * 100) + "%" } }) : null,
+            ),
+          ),
+        ),
+      ),
+      h(
+        "div",
+        { className: "ov-g-dias", "aria-hidden": !0 },
+        marcas.map((i, j) =>
+          h("span", { key: i, style: { left: ((i + 0.5) / n) * 100 + "%" }, className: n === 7 ? "" : j === 0 ? "ini" : j === marcas.length - 1 ? "fim" : "" }, n === 7 ? sem[new Date(dias[i].k + "T12:00").getDay()] : __mpBR(dias[i].k)),
+        ),
+      ),
+      h(
+        "details",
+        { className: "ov-g-tab" },
+        h("summary", null, "Ver em tabela"),
+        h(
+          "table",
+          null,
+          h("thead", null, h("tr", null, h("th", null, "Dia"), h("th", null, "Tempo ouvido"))),
+          h(
+            "tbody",
+            null,
+            [...dias].reverse().filter((d) => d.s >= 1).map((d) => h("tr", { key: d.k }, h("td", null, d.r), h("td", null, __ovTMin(d.s)))),
+          ),
+        ),
+        com ? null : h("p", { className: "meta" }, "Nenhum dia com áudio neste período."),
+      ),
+      total ? null : h("p", { className: "meta" }, "O app conta o tempo com a leitura em voz alta da Teoria tocando."),
+    );
+  }
   function __ovAp() {
     return typeof window != "undefined" && "speechSynthesis" in window && typeof window.SpeechSynthesisUtterance == "function";
   }

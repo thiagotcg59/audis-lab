@@ -23808,6 +23808,7 @@ ${n.rawText}`;
             }),
           ],
         }),
+        (0, fe.jsx)(__OVGraf, {}),
         (0, fe.jsxs)("section", {
           className: "recent-section",
           children: [
