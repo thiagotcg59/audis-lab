@@ -42,9 +42,9 @@
     return (__ovS.au ||= new Audio());
   }
   // onde o áudio de um trecho fica guardado no aparelho: muda com o texto, a voz e o modelo
-  async function __ovGuardaChave(x) {
+  async function __ovGuardaChave(x, chave = __ovSrv.chave) {
     if (typeof caches == "undefined" || !globalThis.crypto?.subtle) return null;
-    let d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(__ovSrv.chave + "|" + x));
+    let d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(chave + "|" + x));
     return "/voz-guardada/" + Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, "0")).join("");
   }
   // áudio de um trecho: o que já está guardado no aparelho ou, se não houver, um pedido à ElevenLabs
@@ -55,6 +55,16 @@
       k = await __ovGuardaChave(x);
       g = k ? await caches.open(__ovGuarda) : null;
       let r = g ? await g.match(k) : null;
+      if (g && !r && __ovSrv.chave) {
+        // áudio guardado quando o aparelho ainda não sabia qual era a voz (logo depois de uma atualização do app,
+        // o service worker antigo não informava): aproveita e passa para a chave certa, sem pedir de novo
+        let k0 = await __ovGuardaChave(x, "");
+        r = await g.match(k0);
+        if (r) {
+          await g.put(k, r.clone());
+          await g.delete(k0);
+        }
+      }
       if (r) {
         let b = await r.blob();
         if (b.size) return b;
