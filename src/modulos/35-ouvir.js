@@ -9,6 +9,7 @@
   // (Cache API do navegador, "audis-voz-v1"): ouvir de novo o mesmo texto com a mesma voz não gasta nada.
   // Se o pedido falhar, a leitura segue com a voz do aparelho.
   // No claude.ai não há /__voz (a página não acessa a internet): lá só existe a voz do aparelho.
+  // O tempo ouvido por dia e por matéria fica na coleção "ouvir" do banco (veja __ovT, logo abaixo).
   // Preferências no aparelho: audis:ov { v: velocidade, voz: nome da voz, fonte: "el" | "ap" }.
   var __ovS = { on: !1, play: !1, tit: "", pars: [], fila: [], i: 0, gen: 0, dorme: 0, dormeMin: 0, tm: 0, err: "", fim: !1, listeners: new Set() };
   var __ovLSK = "audis:ov",
@@ -18,6 +19,140 @@
   var __ovGuarda = "audis-voz-v1",
     __ovGuardaMax = 1500;
   var __ovMudo = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+  // Tempo ouvido: segundos de leitura tocando, por dia e por matéria (a disciplina do mapa).
+  // Coleção "ouvir", documento "tempo": { dias: { "AAAA-MM-DD": { "<matéria>": segundos } } } (últimos 120 dias).
+  // Conta o tempo de relógio com a leitura tocando (em 2x, 10 minutos ouvidos são 10 minutos).
+  // O aparelho soma no que tem e grava a cada minuto e ao pausar; ao receber o banco, fica o maior valor de cada
+  // matéria em cada dia (o tempo só cresce), para um aparelho não apagar o que o outro contou.
+  var __ovT = { dias: {}, ready: !1, sujo: !1, ult: 0 };
+  var __ovTLSK = "audis:ov-tempo";
+  function __ovTJunta(d) {
+    if (!d || typeof d != "object") return;
+    for (let [dia, ms] of Object.entries(d)) {
+      if (!/^\d{4}-\d\d-\d\d$/.test(dia) || !ms || typeof ms != "object") continue;
+      let o = (__ovT.dias[dia] ||= {});
+      for (let [m, v] of Object.entries(ms)) typeof v == "number" && v > (o[m] || 0) && (o[m] = v);
+    }
+  }
+  function __ovTInit() {
+    if (__ovT.ready) return;
+    __ovT.ready = !0;
+    try {
+      __ovTJunta(JSON.parse(__rdLS(__ovTLSK, "null")));
+    } catch {}
+    (async () => {
+      let db = await ka("db");
+      if (!db) return;
+      try {
+        db.collection("ouvir")
+          .limit(5)
+          .onSnapshot(
+            (snap) => {
+              for (let d of snap.docs) d.exists && d.id === "tempo" && __ovTJunta(d.data()?.dias);
+              __ovEmit();
+            },
+            () => {},
+          );
+      } catch {}
+    })();
+  }
+  function __ovTGrava() {
+    if (!__ovT.sujo) return;
+    __ovT.sujo = !1;
+    __ovT.ult = Date.now();
+    let dias = Object.fromEntries(
+      Object.entries(__ovT.dias)
+        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+        .slice(0, 120),
+    );
+    __ovT.dias = dias;
+    __qdQueue("ov:tempo", async () => {
+      try {
+        let db = await ka("db");
+        db && (await db.doc("ouvir/tempo").set({ dias, up: __qdNow() }));
+      } catch {
+        __ovT.sujo = !0;
+      }
+    });
+  }
+  // chamado a cada mudança do leitor e a cada 5 s: soma o intervalo que passou se a leitura estava tocando
+  function __ovTick() {
+    let S = __ovS,
+      now = Date.now(),
+      dt = S.tAnt ? (now - S.tAnt) / 1e3 : 0;
+    if (S.tToca && dt > 0 && dt < 15) {
+      let o = (__ovT.dias[ot(new Date())] ||= {}),
+        m = S.disc || "Sem disciplina";
+      o[m] = Math.round(((o[m] || 0) + dt) * 10) / 10;
+      __ovT.sujo = !0;
+      try {
+        __rdSS(__ovTLSK, JSON.stringify(__ovT.dias));
+      } catch {}
+    }
+    S.tAnt = now;
+    S.tToca = S.on && S.play && !S.carrega;
+    __ovT.sujo && (!S.tToca || now - __ovT.ult > 6e4) && __ovTGrava();
+  }
+  // segundos ouvidos nos últimos `n` dias (1 = só hoje), no total ou de uma matéria
+  function __ovTSeg(n, disc) {
+    let t = 0;
+    for (let i = 0; i < n; i++) {
+      let d = new Date();
+      d.setDate(d.getDate() - i);
+      let o = __ovT.dias[ot(d)] || {};
+      t += disc ? o[disc] || 0 : Object.values(o).reduce((a, b) => a + b, 0);
+    }
+    return t;
+  }
+  function __ovTMin(s) {
+    let m = Math.round(s / 60);
+    return s < 1 ? "0 min" : m < 1 ? "menos de 1 min" : m < 60 ? m + " min" : Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0") + " min";
+  }
+  // quadro "Áudio ouvido": hoje e nos últimos 7 dias, no total e por matéria. Com `disc`, só a linha da matéria.
+  function __OVTempo({ disc }) {
+    __ovUse();
+    let h = __rdR.createElement;
+    if (disc)
+      return h(
+        "p",
+        { className: "ov-t-linha" },
+        h("b", null, __ovTMin(__ovTSeg(1, disc))),
+        " de áudio hoje nesta matéria · ",
+        __ovTMin(__ovTSeg(7, disc)),
+        " nos últimos 7 dias",
+      );
+    let mats = new Set();
+    for (let i = 0; i < 7; i++) {
+      let d = new Date();
+      d.setDate(d.getDate() - i);
+      Object.keys(__ovT.dias[ot(d)] || {}).forEach((m) => mats.add(m));
+    }
+    let L = [...mats].map((m) => ({ m, h: __ovTSeg(1, m), s: __ovTSeg(7, m) })).sort((a, b) => b.h - a.h || b.s - a.s);
+    if (!L.length && !__ovOk()) return null;
+    return h(
+      "section",
+      { className: "ov-t" },
+      h("span", { className: "small-label" }, "ÁUDIO OUVIDO"),
+      h(
+        "div",
+        { className: "ov-t-num" },
+        h("div", null, h("b", null, __ovTMin(__ovTSeg(1))), h("span", null, "hoje")),
+        h("div", null, h("b", null, __ovTMin(__ovTSeg(7))), h("span", null, "nos últimos 7 dias")),
+      ),
+      L.length
+        ? h(
+            "table",
+            null,
+            h("thead", null, h("tr", null, h("th", null, "Matéria"), h("th", null, "Hoje"), h("th", null, "7 dias"))),
+            h(
+              "tbody",
+              null,
+              L.map((x) => h("tr", { key: x.m }, h("td", null, x.m), h("td", null, __ovTMin(x.h)), h("td", null, __ovTMin(x.s)))),
+            ),
+          )
+        : h("p", { className: "meta" }, "Conta o tempo com a leitura em voz alta tocando. Ainda não há nada nos últimos 7 dias."),
+    );
+  }
   function __ovAp() {
     return typeof window != "undefined" && "speechSynthesis" in window && typeof window.SpeechSynthesisUtterance == "function";
   }
@@ -101,6 +236,7 @@
     return c.get(x);
   }
   function __ovEmit() {
+    __ovTick();
     __ovS.listeners.forEach((f) => {
       try {
         f();
@@ -190,10 +326,13 @@
     S.auI = -1;
     S.i = Math.max(0, S.fila.findIndex((f) => f.p >= p));
   }
-  function __ovAbrir(tit, pars, cap) {
+  function __ovAbrir(tit, pars, cap, disc) {
     let S = __ovS;
     S.pars = pars;
     S.tit = tit;
+    S.disc = disc || "";
+    clearInterval(S.tIv);
+    S.tIv = setInterval(__ovEmit, 5e3);
     S.on = !0;
     S.err = S.aviso = "";
     S.fim = S.semEl = !1;
@@ -383,6 +522,7 @@
   function __ovFechar() {
     let S = __ovS;
     clearTimeout(S.tm);
+    clearInterval(S.tIv);
     S.gen++;
     S.on = S.play = S.carrega = !1;
     S.dorme = S.dormeMin = 0;
@@ -406,6 +546,7 @@
     __rdR.useEffect(() => {
       __ovS.listeners.add(f);
       __ovSrvInit();
+      __ovTInit();
       // as vozes chegam depois da página em alguns navegadores
       let ok = __ovAp();
       ok && speechSynthesis.addEventListener?.("voiceschanged", f);
@@ -434,12 +575,12 @@
     );
   }
   // botão que começa a leitura (cap: índice do capítulo; sem ele, do início)
-  function __OVBtn({ tit, pars, cap, className, children }) {
+  function __OVBtn({ tit, pars, cap, disc, className, children }) {
     __ovUse();
     if (!__ovOk() || !pars.length) return null;
     return __rdR.createElement(
       "button",
-      { type: "button", className, onClick: () => __ovAbrir(tit, pars, cap || 0) },
+      { type: "button", className, onClick: () => __ovAbrir(tit, pars, cap || 0, disc) },
       children,
     );
   }
@@ -489,6 +630,7 @@
       ),
       h("span", { className: "ov-resta" }, S.err || (S.carrega ? "preparando a voz…" : resta)),
       S.aviso ? h("span", { className: "ov-resta" }, S.aviso) : null,
+      h("span", { className: "ov-resta" }, "Ouvido hoje: ", __ovTMin(__ovTSeg(1)), S.disc ? ` (${__ovTMin(__ovTSeg(1, S.disc))} nesta matéria)` : ""),
       S.el && !S.carrega
         ? h(
             "span",

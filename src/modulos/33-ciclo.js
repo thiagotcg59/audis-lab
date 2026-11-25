@@ -5,7 +5,8 @@
   // Coleção "ciclo", dois documentos:
   //   edital     { nome, discs: [{ id, n, grupo, q, peso, b (blocos por volta), as: [{ id, t }] }] }
   //   andamento  { volta, done: { "<id da disciplina>#<nº>": 1 }, cont: { <id do assunto>: n },
-  //                tot: { <id da disciplina>: n }, log: [{ d, k, a, s, v }] }
+  //                tot: { <id da disciplina>: n }, log: [{ d, k, a, s, v }],
+  //                est: { <id do assunto>: "AAAA-MM-DD" (dia em que foi marcado como estudado) } }
   // Enquanto o aluno não mexe no edital, vale o de referência (__ciRef, módulo 32).
   var __ciStore = { ed: null, an: null, ready: !1, loaded: !1, listeners: new Set(), err: "" };
   var __ciLSK = "audis:ci",
@@ -92,7 +93,7 @@
   }
   function __ciAn() {
     let a = __ciStore.an || {};
-    return { volta: a.volta || 1, done: a.done || {}, cont: a.cont || {}, tot: a.tot || {}, log: a.log || [] };
+    return { volta: a.volta || 1, done: a.done || {}, cont: a.cont || {}, tot: a.tot || {}, log: a.log || [], est: a.est || {} };
   }
   function __ciSetEd(fn) {
     let e = __ciEd();
@@ -129,8 +130,15 @@
       tot = { ...an.tot, [discId]: (an.tot[discId] || 0) + 1 },
       log = [...an.log, { d: __qdNow(), k: discId, a: assId || "", s, v: an.volta }].slice(-400),
       fechou = fila.length > 0 && fila.every((x) => done[x.key]);
-    __ciSave("andamento", { volta: fechou ? an.volta + 1 : an.volta, done: fechou ? {} : done, cont, tot, log });
+    __ciSave("andamento", { volta: fechou ? an.volta + 1 : an.volta, done: fechou ? {} : done, cont, tot, log, est: an.est });
     return fechou;
+  }
+  // marca (ou desmarca) um assunto como estudado: `est` guarda o dia em que foi marcado
+  function __ciEstudado(assId, sim) {
+    let an = __ciAn(),
+      est = { ...an.est };
+    sim ? (est[assId] = ot(new Date())) : delete est[assId];
+    __ciSave("andamento", { ...an, est });
   }
   function __ciDesfazer() {
     let an = __ciAn(),

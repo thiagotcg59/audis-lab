@@ -5102,6 +5102,7 @@ C) Terceira alternativa`,
       "/teoria": () => (0, Qa.jsx)(__TE, {}),
       "/ciclo": () => (0, Qa.jsx)(__CI, {}),
       "/edital": () => (0, Qa.jsx)(__ED, {}),
+      "/assunto": () => (0, Qa.jsx)(__AS, {}),
       "/conquistas": () => (0, Qa.jsx)(__CQ, {}),
       "/adicionar": () => (0, Qa.jsx)(g0, {}),
     };

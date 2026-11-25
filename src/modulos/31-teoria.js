@@ -1272,7 +1272,12 @@
     return h(
       "main",
       { className: "page mp te" },
-      h(re, { className: "text-link mp-back", href: "/teoria" }, "‹ Toda a teoria"),
+      h(
+        "div",
+        { className: "mm-btns mp-back" },
+        h(re, { className: "text-link", href: "/teoria" }, "‹ Toda a teoria"),
+        map.ci ? h(re, { className: "text-link", href: "/assunto?a=" + encodeURIComponent(map.ci) }, "página do assunto") : null,
+      ),
       h(
         "div",
         { className: "page-intro" },
@@ -1328,7 +1333,7 @@
                       ? "Atualizar a teoria"
                       : "Reescrever a teoria",
             ),
-        h(__OVBtn, { tit: nome, pars: ouvir, className: "qd-btn" }, "Ouvir a teoria"),
+        h(__OVBtn, { tit: nome, pars: ouvir, disc: map.disc, className: "qd-btn" }, "Ouvir a teoria"),
         caps.length
           ? h("button", { type: "button", className: "qd-btn", disabled: !!busy, onClick: () => setCopia(!0) }, "Copiar capítulos para outro assunto")
           : null,
@@ -1419,7 +1424,7 @@
             { className: "chapter-number" },
             "CAPÍTULO ",
             i + 1,
-            h(__OVBtn, { tit: nome, pars: ouvir, cap: i, className: "text-link ov-daqui" }, "ouvir a partir daqui"),
+            h(__OVBtn, { tit: nome, pars: ouvir, cap: i, disc: map.disc, className: "text-link ov-daqui" }, "ouvir a partir daqui"),
           ),
           h("h2", { id: "te-h-" + __teChave(c) }, titulo(c)),
           c.bl.map((b, j) => {
@@ -1501,6 +1506,7 @@
       mid && __mpStore.loaded
         ? h("p", { className: "understood-error", role: "alert" }, "Este assunto não existe mais.")
         : null,
+      h(__OVTempo, null),
       !__mpStore.loaded && !list.length ? h("p", { className: "meta" }, "Abrindo a teoria…") : null,
       __mpStore.loaded && !list.length
         ? h(

@@ -10099,3 +10099,139 @@ b.mm-gap.done.p {
     scroll-margin-top: 88px;
   }
 }
+
+/* Página do assunto (src/modulos/36-assunto.js) */
+.as-est {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1.5px solid var(--ci);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ci) 14%, #fff);
+  color: var(--ink);
+  font:
+    15px/1.4 Arial,
+    sans-serif;
+}
+.as-est.on {
+  background: var(--ci);
+  color: #fff;
+}
+.as-est > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.as-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.as-c {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.as-c p {
+  margin: 0;
+  font:
+    15px/1.5 Arial,
+    sans-serif;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.as-c .mm-btns {
+  margin-top: auto;
+  padding-top: 4px;
+}
+.as-subs {
+  margin: 0;
+  padding-left: 18px;
+  font:
+    14px/1.6 Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.as .page-intro h1 {
+  overflow-wrap: anywhere;
+}
+/* Ouvir: tempo de áudio ouvido (__OVTempo) */
+.ov-t {
+  margin: 18px 0 6px;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.ov-t-num {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 32px;
+}
+.ov-t-num div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ov-t-num b {
+  font:
+    500 26px/1.1 Georgia,
+    "Times New Roman",
+    serif;
+  color: var(--ink);
+}
+.ov-t-num span {
+  font:
+    12px Arial,
+    sans-serif;
+  color: var(--muted);
+}
+.ov-t table {
+  width: 100%;
+  border-collapse: collapse;
+  font:
+    14px/1.4 Arial,
+    sans-serif;
+  color: var(--ink);
+}
+.ov-t th,
+.ov-t td {
+  padding: 7px 0 7px 12px;
+  border-top: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.ov-t th {
+  border-top: 0;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ov-t th:first-child,
+.ov-t td:first-child {
+  padding-left: 0;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.ov-t .meta {
+  margin: 0;
+}
+.mm-btns.mp-back {
+  display: flex;
+  gap: 4px 18px;
+}

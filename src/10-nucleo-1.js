@@ -22013,7 +22013,7 @@ ${JSON.stringify(t, null, 2)}`;
                     href: i,
                     title: t ? o : void 0,
                     "aria-current": r === i ? "page" : void 0,
-                    className: `nav-item ${r === i ? "active" : ""}`,
+                    className: `nav-item ${r === i || (r === "/assunto" && i === "/edital") ? "active" : ""}`,
                     children: [
                       (0, be.jsx)(s, { size: 19, strokeWidth: 1.65 }),
                       (0, be.jsx)("span", { children: o }),
@@ -22099,7 +22099,9 @@ ${JSON.stringify(t, null, 2)}`;
                 (0, be.jsx)("span", {
                   children: r.startsWith("/missoes")
                     ? "Miss\xF5es"
-                    : (tO.find((o) => o.href === r)?.label ?? "Adicionar"),
+                    : r === "/assunto"
+                      ? "Edital"
+                      : (tO.find((o) => o.href === r)?.label ?? "Adicionar"),
                 }),
                 (0, be.jsxs)("span", {
                   className: "prototype",
