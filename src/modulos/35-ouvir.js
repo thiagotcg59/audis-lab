@@ -5,15 +5,18 @@
   // (o "pause" do navegador não funciona no Android).
   // Onde o servidor tem a chave da ElevenLabs (computador com .env, ou Vercel com a senha neste aparelho),
   // a leitura pode usar a voz dela: o app pede o áudio de um parágrafo de cada vez em /__voz (ia/voz.mjs)
-  // e toca num <audio>. É pago por caractere; o áudio de cada parágrafo fica guardado enquanto a leitura
-  // está aberta, para não pedir duas vezes. Se o pedido falhar, a leitura segue com a voz do aparelho.
+  // e toca num <audio>. É pago por caractere; por isso o áudio de cada parágrafo fica guardado neste aparelho
+  // (Cache API do navegador, "audis-voz-v1"): ouvir de novo o mesmo texto com a mesma voz não gasta nada.
+  // Se o pedido falhar, a leitura segue com a voz do aparelho.
   // No claude.ai não há /__voz (a página não acessa a internet): lá só existe a voz do aparelho.
   // Preferências no aparelho: audis:ov { v: velocidade, voz: nome da voz, fonte: "el" | "ap" }.
   var __ovS = { on: !1, play: !1, tit: "", pars: [], fila: [], i: 0, gen: 0, dorme: 0, dormeMin: 0, tm: 0, err: "", fim: !1, listeners: new Set() };
   var __ovLSK = "audis:ov",
     __ovVels = [0.8, 1, 1.25, 1.5, 1.75, 2],
     __ovSonos = [0, 15, 30, 60];
-  var __ovSrv = { ok: null, p: null, cache: new Map() };
+  var __ovSrv = { ok: null, p: null, chave: "", cache: new Map() };
+  var __ovGuarda = "audis-voz-v1",
+    __ovGuardaMax = 1500;
   var __ovMudo = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
   function __ovAp() {
     return typeof window != "undefined" && "speechSynthesis" in window && typeof window.SpeechSynthesisUtterance == "function";
@@ -25,7 +28,10 @@
   function __ovSrvInit() {
     __ovSrv.p ||= fetch("/__config")
       .then((r) => r.json())
-      .then((c) => (__ovSrv.ok = c?.voz === !0))
+      .then((c) => {
+        __ovSrv.chave = String(c?.vozChave || "");
+        __ovSrv.ok = c?.voz === !0;
+      })
       .catch(() => (__ovSrv.ok = !1))
       .then(__ovEmit);
   }
@@ -35,17 +41,45 @@
   function __ovAudio() {
     return (__ovS.au ||= new Audio());
   }
-  // áudio de um trecho pela ElevenLabs; devolve o endereço local do áudio
+  // onde o áudio de um trecho fica guardado no aparelho: muda com o texto, a voz e o modelo
+  async function __ovGuardaChave(x) {
+    if (typeof caches == "undefined" || !globalThis.crypto?.subtle) return null;
+    let d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(__ovSrv.chave + "|" + x));
+    return "/voz-guardada/" + Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  // áudio de um trecho: o que já está guardado no aparelho ou, se não houver, um pedido à ElevenLabs
+  async function __ovAudioDe(x) {
+    let k = null,
+      g = null;
+    try {
+      k = await __ovGuardaChave(x);
+      g = k ? await caches.open(__ovGuarda) : null;
+      let r = g ? await g.match(k) : null;
+      if (r) {
+        let b = await r.blob();
+        if (b.size) return b;
+      }
+    } catch {}
+    let r = await fetch("/__voz", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: x }) });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || "A voz da ElevenLabs não respondeu.");
+    let b = await r.blob();
+    if (g && b.size)
+      try {
+        await g.put(k, new Response(b, { headers: { "content-type": b.type || "audio/mpeg" } }));
+        // limite do que fica guardado: ao passar dele, saem os trechos mais antigos
+        let ks = await g.keys();
+        if (ks.length > __ovGuardaMax) for (let q of ks.slice(0, ks.length - __ovGuardaMax + 100)) await g.delete(q);
+      } catch {}
+    return b;
+  }
+  // devolve o endereço local do áudio de um trecho (um pedido por trecho enquanto a leitura está aberta)
   function __ovBusca(x) {
     let c = __ovSrv.cache;
     if (!c.has(x))
       c.set(
         x,
-        fetch("/__voz", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: x }) })
-          .then(async (r) => {
-            if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || "A voz da ElevenLabs não respondeu.");
-            return URL.createObjectURL(await r.blob());
-          })
+        __ovAudioDe(x)
+          .then((b) => URL.createObjectURL(b))
           .catch((e) => {
             c.delete(x);
             throw e;

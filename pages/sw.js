@@ -25,14 +25,14 @@ async function iaDisponivel() {
     if (!(await A.lerAjuste("senha-ia"))) return { ia: false, voz: false };
     const r = await fetch(API("config"), { cache: "no-store" });
     const c = r.ok ? await r.json() : {};
-    return { ia: c.ia === true, voz: c.voz === true };
+    return { ia: c.ia === true, voz: c.voz === true, vozChave: c.vozChave || null };
   } catch { return { ia: false, voz: false }; }
 }
 const novoId = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
 
 async function atender(req, url) {
   const p = url.pathname, m = req.method;
-  if (m === "GET" && p === "/__config") { const { ia, voz } = await iaDisponivel(); return json(200, { sample: ia, images: ia, ia: ia ? "anthropic" : null, modelos: null, voz }); }
+  if (m === "GET" && p === "/__config") { const { ia, voz, vozChave } = await iaDisponivel(); return json(200, { sample: ia, images: ia, ia: ia ? "anthropic" : null, modelos: null, voz, vozChave: vozChave || null }); }
   if (m === "GET" && p === "/__db") {
     const c = url.searchParams.get("c");
     if (!caminhoOk(c, false)) return json(500, { code: "upstream_error", message: "coleção inválida: " + c });

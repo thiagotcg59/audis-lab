@@ -8,7 +8,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { montarJs } from '../scripts/build.mjs';
-import { pedirVoz, vozConfigurada } from '../ia/voz.mjs';
+import { pedirVoz, vozConfigurada, chaveVoz } from '../ia/voz.mjs';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = process.argv.includes('--dist'); // serve dist/ (o que vai ser publicado) em vez de montar src/ na hora
@@ -110,7 +110,7 @@ const servidor = http.createServer(async (req, res) => {
     if (req.method === 'GET' && p === '/dev/claude-shim.js') return arquivo(res, path.join(raiz, 'dev/claude-shim.js'), 'text/javascript; charset=utf-8');
     if (req.method === 'GET' && p === '/app.js') { if (DIST) return arquivo(res, path.join(raiz, 'dist/app.js'), 'text/javascript; charset=utf-8'); res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' }); return res.end(montarJs()); }
     if (req.method === 'GET' && p === '/app.css') return arquivo(res, path.join(raiz, DIST ? 'dist/app.css' : 'src/app.css'), 'text/css; charset=utf-8');
-    if (req.method === 'GET' && p === '/__config') return json(res, 200, { sample: temIA, images: temIA, ia: temIA ? IA : null, modelos: temIA ? MODELOS[IA] : null, voz: vozConfigurada() });
+    if (req.method === 'GET' && p === '/__config') return json(res, 200, { sample: temIA, images: temIA, ia: temIA ? IA : null, modelos: temIA ? MODELOS[IA] : null, voz: vozConfigurada(), vozChave: vozConfigurada() ? chaveVoz() : null });
     if (req.method === 'GET' && p === '/__db') return json(res, 200, lerColecao(url.searchParams.get('c')));
     if (req.method === 'POST' && (p === '/__db/set' || p === '/__db/delete')) {
       const { path: doc, data } = JSON.parse((await corpo(req)).toString('utf8') || '{}');

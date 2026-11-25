@@ -9,6 +9,8 @@ const BASE = () => (env.ELEVENLABS_BASE_URL || 'https://api.elevenlabs.io').repl
 export const MAX_TEXTO = 2500; // caracteres por pedido; o app manda um parágrafo de cada vez
 
 export const vozConfigurada = () => !!env.ELEVENLABS_API_KEY && !!env.ELEVENLABS_VOICE_ID;
+// Muda quando a voz ou o modelo mudam: o app usa para não tocar áudio guardado de outra voz.
+export const chaveVoz = () => `${env.ELEVENLABS_VOICE_ID || ''}:${env.ELEVENLABS_MODEL || 'eleven_multilingual_v2'}`;
 
 // Devolve { tipo, dados } com o áudio em MP3. Erros saem como { status, code, message }.
 export async function pedirVoz({ text } = {}, { signal } = {}) {
