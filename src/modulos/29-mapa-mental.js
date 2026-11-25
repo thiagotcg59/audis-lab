@@ -252,6 +252,15 @@
     }
     return s;
   }
+  // treino do mapa inteiro que ficou pela metade: quantas lacunas já foram respondidas nele
+  function __mpPend(m) {
+    let r = m?.tr?.res;
+    if (!r || typeof r != "object") return null;
+    let n = 0,
+      total = 0;
+    for (let p of m.pags) for (let g of __mpGaps(p)) total++, /^[ypn]$/.test(r[g.key] || "") && n++;
+    return n && n < total ? { n, total } : null;
+  }
   function __mpDue(m, today) {
     return !!(m.srs?.d && m.srs.d <= today);
   }
@@ -442,7 +451,7 @@
     if (!v) throw { code: "invalid_json" };
     return { v, c: typeof r.comentario == "string" ? S(r.comentario, 260) : "" };
   }
-  function __MPStudy({ mapId, pageIds, ramoIds, only, full, onClose }) {
+  function __MPStudy({ mapId, pageIds, ramoIds, only, full, resume, onClose }) {
     __mpUse();
     let h = __rdR.createElement;
     // a fila é montada uma vez, ao abrir: responder não pode reordenar o treino
@@ -458,9 +467,19 @@
       }
       return q;
     });
-    let [pos, setPos] = __rdR.useState(0),
+    // continuar de onde parou: as respostas da última tentativa voltam e o treino segue na primeira lacuna sem resposta
+    let [res, setRes] = __rdR.useState(() => {
+        let r = {},
+          old = (resume && full && !only && __mpStore.items[mapId]?.tr?.res) || {};
+        for (let g of queue) /^[ypn]$/.test(old[g.key] || "") && (r[g.key] = old[g.key]);
+        return r;
+      }),
+      proxima = (r, q = queue) => {
+        let i = q.findIndex((g) => !r[g.key]);
+        return i < 0 ? q.length : i;
+      },
+      [pos, setPos] = __rdR.useState(() => proxima(res)),
       [open, setOpen] = __rdR.useState(!1),
-      [res, setRes] = __rdR.useState({}),
       [img, setImg] = __rdR.useState(!1),
       [next, setNext] = __rdR.useState(""),
       [txt, setTxt] = __rdR.useState(""),
@@ -498,16 +517,26 @@
       // parcial vale meia lacuna na conta da próxima revisão
       let srs = __mpSched(__mpStore.items[mapId], vals.reduce((n, v) => n + (v === "y" ? 1 : v === "p" ? 0.5 : 0), 0) / vals.length);
       setNext(srs.d);
-      __mpUpd(mapId, (m) => ({ ...m, srs }));
+      __mpUpd(mapId, (m) => {
+        let { tr, ...r } = m;
+        return { ...r, srs };
+      });
     }, [done]);
     __rdR.useEffect(() => () => pedido.current?.abort(), []);
     let answer = (v) => {
-      __mpUpdPage(mapId, cur.pid, (p) => ({ ...p, mst: { ...(p.mst || {}), [cur.key]: v } }));
-      setRes({ ...res, [cur.key]: v });
+      let nr = { ...res, [cur.key]: v },
+        guarda = full && !only && !sched.current;
+      // o treino do mapa inteiro fica guardado a cada resposta, para poder continuar depois
+      __mpUpd(mapId, (m) => ({
+        ...m,
+        ...(guarda ? { tr: { res: nr, at: __qdNow() } } : {}),
+        pags: m.pags.map((p) => (p.id === cur.pid ? { ...p, mst: { ...(p.mst || {}), [cur.key]: v } } : p)),
+      }));
+      setRes(nr);
       setOpen(!1);
       setTxt("");
       setNota(null);
-      setPos(pos + 1);
+      setPos(proxima(nr));
     };
     let conferir = async () => {
       let resposta = txt.trim();
@@ -597,6 +626,7 @@
       );
     }
     let inQ = new Map(queue.map((g, i) => [g.key, i])),
+      feitas = queue.filter((g) => res[g.key]).length,
       src = img ? __qdSrc(page) : null,
       pn = map.pags.length > 1 ? map.pags.findIndex((p) => p.id === cur.pid) + 1 : 0;
     return frame(
@@ -610,7 +640,7 @@
             "div",
             null,
             h("b", null, map.nome || "Mapa mental"),
-            h("span", { className: "meta" }, pn ? `Página ${pn} · ` : "", pos + 1, " de ", queue.length),
+            h("span", { className: "meta" }, pn ? `Página ${pn} · ` : "", feitas + 1, " de ", queue.length),
           ),
           closeBtn,
         ),
@@ -621,9 +651,9 @@
             role: "progressbar",
             "aria-valuemin": 0,
             "aria-valuemax": queue.length,
-            "aria-valuenow": pos,
+            "aria-valuenow": feitas,
           },
-          h("i", { style: { width: (pos / queue.length) * 100 + "%" } }),
+          h("i", { style: { width: (feitas / queue.length) * 100 + "%" } }),
         ),
         img
           ? h(
@@ -651,7 +681,7 @@
                         w = { width: Math.min(26, Math.max(4, p.g.length)) + "ch" };
                       // fora da fila (treino só das que faltaram): fica à vista, como contexto
                       if (qi === void 0) return h("b", { key: k, className: "mm-ctx" }, p.g);
-                      if (qi < pos) return h("b", { key: k, className: "mm-gap done " + (res[key] || "") }, p.g);
+                      if (qi !== pos && res[key]) return h("b", { key: k, className: "mm-gap done " + res[key] }, p.g);
                       if (qi === pos)
                         return open
                           ? h("b", { key: k, className: "mm-gap now open" }, p.g)
@@ -1136,7 +1166,8 @@
       pidx = page ? map.pags.indexOf(page) : -1,
       rd = page ? __mpStore.reading[page.id] : !1,
       rerr = page ? __mpStore.rerr[page.id] : "",
-      ps = page && __mpRead(page) ? __mpPageStats(page) : null;
+      ps = page && __mpRead(page) ? __mpPageStats(page) : null,
+      pend = __mpPend(map);
     return h(
       "main",
       { className: "page mp" },
@@ -1219,15 +1250,29 @@
       h(
         "div",
         { className: "mm-btns mp-acts" },
+        pend
+          ? h(
+              "button",
+              {
+                type: "button",
+                className: "qd-btn pri",
+                onClick: () => setRun({ ids: readIds, only: !1, full: !0, resume: !0 }),
+              },
+              "Continuar de onde parei · ",
+              pend.n,
+              " de ",
+              pend.total,
+            )
+          : null,
         h(
           "button",
           {
             type: "button",
-            className: "qd-btn pri",
+            className: "qd-btn" + (pend ? "" : " pri"),
             disabled: !s.total,
             onClick: () => setRun({ ids: readIds, only: !1, full: !0 }),
           },
-          "Treinar o mapa",
+          pend ? "Treinar do início" : "Treinar o mapa",
         ),
         s.n
           ? h(
@@ -1533,6 +1578,7 @@
             ramoIds: run.ramoIds,
             only: run.only,
             full: run.full,
+            resume: run.resume,
             onClose: () => setRun(null),
           })
         : null,
