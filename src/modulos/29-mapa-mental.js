@@ -253,9 +253,19 @@
     return s;
   }
   // treino do mapa inteiro que ficou pela metade: quantas lacunas já foram respondidas nele
+  // respostas do treino em andamento. Num mapa que nunca teve um treino inteiro terminado, valem as respostas
+  // já marcadas nas páginas (treinos interrompidos antes de existir o "continuar")
+  function __mpTrRes(m) {
+    if (!m) return null;
+    if (m.tr?.res && typeof m.tr.res == "object") return m.tr.res;
+    if (m.srs) return null;
+    let r = {};
+    for (let p of m.pags) Object.assign(r, p.mst || {});
+    return r;
+  }
   function __mpPend(m) {
-    let r = m?.tr?.res;
-    if (!r || typeof r != "object") return null;
+    let r = __mpTrRes(m);
+    if (!r) return null;
     let n = 0,
       total = 0;
     for (let p of m.pags) for (let g of __mpGaps(p)) total++, /^[ypn]$/.test(r[g.key] || "") && n++;
@@ -470,7 +480,7 @@
     // continuar de onde parou: as respostas da última tentativa voltam e o treino segue na primeira lacuna sem resposta
     let [res, setRes] = __rdR.useState(() => {
         let r = {},
-          old = (resume && full && !only && __mpStore.items[mapId]?.tr?.res) || {};
+          old = (resume && full && !only && __mpTrRes(__mpStore.items[mapId])) || {};
         for (let g of queue) /^[ypn]$/.test(old[g.key] || "") && (r[g.key] = old[g.key]);
         return r;
       }),
