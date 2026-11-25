@@ -184,10 +184,11 @@
   function __ciMapaDe(assId) {
     return Object.values(__mpStore.items).find((m) => m && m.ci === assId && Array.isArray(m.pags)) || null;
   }
-  function __ciAbrir(d, a, rota) {
+  // devolve o mapa do assunto, criando um vazio se ainda não existir (null enquanto os mapas não carregaram)
+  function __ciMapaCriar(d, a) {
     let m = __ciMapaDe(a.id);
     if (!m) {
-      if (!__mpStore.loaded) return;
+      if (!__mpStore.loaded) return null;
       let nome = a.t
         .replace(/^\s*\d+(\.\d+)*\.?\s+/, "")
         .replace(/\s+/g, " ")
@@ -198,7 +199,11 @@
       m = { id: __mpId("m"), nome: nome || "Assunto do edital", disc: d.n.slice(0, 60), at: __qdNow(), pags: [], ci: a.id };
       __mpPut(m);
     }
-    location.hash = "#/" + rota + "?m=" + encodeURIComponent(m.id);
+    return m;
+  }
+  function __ciAbrir(d, a, rota) {
+    let m = __ciMapaCriar(d, a);
+    m && (location.hash = "#/" + rota + "?m=" + encodeURIComponent(m.id));
   }
   function __CIAtalhos({ d, a }) {
     let h = __rdR.createElement,

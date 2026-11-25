@@ -59,6 +59,7 @@
       an = __ciAn(),
       [filtro, setFiltro] = __rdR.useState("todos"),
       [novo, setNovo] = __rdR.useState(null),
+      [copia, setCopia] = __rdR.useState(null),
       discs = ed.discs.map((d, i) => {
         let itens = d.as.map((a) => ({ a, info: __edInfo(a), blocos: an.cont[a.id] || 0 }));
         return { d, i, itens, comT: itens.filter((x) => x.info.st === "t").length };
@@ -186,9 +187,25 @@
                 },
                 "Criar e abrir a teoria",
               ),
+              Object.values(__teStore.items).some((d) => d?.caps?.length)
+                ? h(
+                    "button",
+                    {
+                      type: "button",
+                      className: "qd-btn",
+                      disabled: !__mpStore.loaded,
+                      onClick: () => {
+                        setCopia({ d: novo.d, a: novo.a });
+                        setNovo(null);
+                      },
+                    },
+                    "Copiar capítulos de outra teoria",
+                  )
+                : null,
               h("button", { type: "button", className: "qd-btn", onClick: () => setNovo(null) }, "Cancelar"),
             ),
           )
         : null,
+      copia ? h(__TECopia, { para: copia, onClose: () => setCopia(null) }) : null,
     );
   }

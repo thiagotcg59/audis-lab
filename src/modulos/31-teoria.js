@@ -1010,6 +1010,243 @@
     );
   }
 
+  // --- copiar capítulos para a teoria de outro assunto ---
+  // A cópia leva os parágrafos sem mudar uma letra. O áudio da ElevenLabs guardado no aparelho é achado pelo
+  // texto e pela voz (módulo 35), então os parágrafos copiados tocam no destino sem pedido novo.
+  // A teoria de destino fica `livre`: os capítulos copiados não vêm dos ramos do mapa dela (`rids` vazio), e
+  // os subtemas do Material do capítulo de origem seguem em `auto`, para "O que já caiu" continuar aparecendo.
+  // `cp` guarda de onde o capítulo veio (<id do mapa>|<chave>): copiar de novo troca o capítulo, não repete.
+  // para: { mid } (um mapa que já existe) ou { d, a } (assunto do edital; o mapa é criado se faltar).
+  function __teCopiar(deMid, chaves, para, state) {
+    let src = __teStore.items[deMid],
+      srcMap = __mpStore.items[deMid];
+    if (!src || !srcMap) return { erro: "A teoria de origem não foi encontrada." };
+    let { nodes } = __mpIdx(state),
+      byId = new Map(__mpAllRamos(srcMap).map((r) => [r.b.id, r.b])),
+      novos = src.caps
+        .filter((c) => chaves.includes(__teChave(c)))
+        .map((c) => ({
+          id: __mpId("c"),
+          t: (!src.livre && byId.get(c.rid)?.t) || c.t,
+          rids: [],
+          auto: __teSubsCap(nodes, byId, c),
+          bl: c.bl.map((b) => ({ ...b })),
+          iv: {},
+          ...(c.gv ? { gv: c.gv } : {}),
+          cp: deMid + "|" + __teChave(c),
+        }));
+    if (!novos.length) return { erro: "Escolha pelo menos um capítulo." };
+    let m = para.mid ? __mpStore.items[para.mid] : __ciMapaCriar(para.d, para.a);
+    if (!m) return { erro: "Os mapas ainda estão abrindo. Tente de novo em instantes." };
+    if (m.id === deMid) return { erro: "O destino é o mesmo assunto da origem." };
+    let old = __teStore.items[m.id],
+      dById = new Map(__mpAllRamos(m).map((r) => [r.b.id, r.b])),
+      // teoria de destino que ainda segue os ramos do mapa: os capítulos dela passam para o formato livre
+      base = (old?.caps || []).map((c) => {
+        if (old.livre || c.id) return c;
+        let { rid, s, ...resto } = c;
+        return { ...resto, id: __mpId("c"), t: dById.get(rid)?.t || c.t, rids: [rid] };
+      }),
+      troca = new Map(novos.map((n) => [n.cp, n])),
+      caps = base.map((c) => {
+        let n = c.cp ? troca.get(c.cp) : null;
+        n && troca.delete(c.cp);
+        return n || c;
+      });
+    let noFim = troca.size;
+    caps.push(...troca.values());
+    let doc = {
+      ...(old || { id: m.id, at: __qdNow() }),
+      nome: m.nome || "",
+      caps,
+      livre: !0,
+      ...(old ? { ant: { caps: old.caps, livre: !!old.livre } } : {}),
+    };
+    // cada documento do banco tem limite de 256 KiB
+    if (JSON.stringify(doc).length > 23e4)
+      return { erro: "A teoria de destino ficaria grande demais. Copie menos capítulos de cada vez." };
+    __tePut(doc);
+    return { m, n: novos.length, noFim: base.length ? noFim : 0, trocados: novos.length - noFim };
+  }
+  // janela de cópia. de: id do mapa de origem (fixo, vindo da Teoria); para: { d, a } (fixo, vindo do Edital).
+  function __TECopia({ de, para, onClose }) {
+    __teUse();
+    __ciUse();
+    let h = __rdR.createElement,
+      { state } = W(),
+      [src, setSrc] = __rdR.useState(de || ""),
+      [sel, setSel] = __rdR.useState(() => new Set()),
+      [dst, setDst] = __rdR.useState(""),
+      [res, setRes] = __rdR.useState(null),
+      ed = __ciEd(),
+      doc = src ? __teStore.items[src] : null,
+      map = src ? __mpStore.items[src] : null,
+      fixo = para ? __ciMapaDe(para.a.id) : null,
+      byId = new Map(map ? __mpAllRamos(map).map((r) => [r.b.id, r.b]) : []),
+      titulo = (c) => (!doc.livre && byId.get(c.rid)?.t) || c.t,
+      origens = __mpList().filter((m) => __teStore.items[m.id]?.caps?.length && m.id !== fixo?.id),
+      // a disciplina da origem vem primeiro na lista de destinos
+      discs = [...ed.discs].sort((x, y) => y.as.some((a) => a.id === map?.ci) - x.as.some((a) => a.id === map?.ci)),
+      noEdital = new Set(ed.discs.flatMap((d) => d.as.map((a) => a.id))),
+      outros = __mpList().filter((m) => m.id !== src && !noEdital.has(m.ci)),
+      curto = (t) => (t.length > 70 ? t.slice(0, 69).trimEnd() + "…" : t),
+      alvo = () => {
+        if (para) return para;
+        if (dst.startsWith("m:")) return { mid: dst.slice(2) };
+        for (let d of ed.discs) for (let a of d.as) if ("a:" + a.id === dst) return { d, a };
+        return null;
+      },
+      copiar = () => {
+        let p = alvo();
+        p && setRes(__teCopiar(src, [...sel], p, state));
+      };
+    if (res && !res.erro)
+      return h(
+        da,
+        { title: "Capítulos copiados", onClose },
+        h(
+          "p",
+          { className: "ed-dlg-t" },
+          res.n === 1 ? "1 capítulo copiado para " : `${res.n} capítulos copiados para `,
+          h("b", null, res.m.nome),
+          ".",
+          res.trocados ? " O que já tinha sido copiado antes foi trocado pela versão de agora." : "",
+          res.noFim ? " Os novos entraram depois dos capítulos que já estavam lá." : "",
+        ),
+        h(
+          "p",
+          { className: "meta" },
+          "Ao ouvir neste aparelho, os parágrafos copiados usam o áudio que já foi gravado: nada é pedido de novo à ElevenLabs. Só a frase curta com o número e o título do capítulo é gravada outra vez quando o número muda.",
+        ),
+        h(
+          "div",
+          { className: "mm-btns" },
+          h(re, { className: "qd-btn pri", href: "/teoria?m=" + encodeURIComponent(res.m.id) }, "Abrir a teoria de destino"),
+          h("button", { type: "button", className: "qd-btn", onClick: onClose }, "Fechar"),
+        ),
+      );
+    return h(
+      da,
+      { title: "Copiar capítulos", onClose },
+      h(
+        "div",
+        { className: "te-cp" },
+        de
+          ? null
+          : h(
+              "label",
+              null,
+              h("span", { className: "small-label" }, "DE QUAL TEORIA"),
+              h(
+                "select",
+                {
+                  value: src,
+                  onChange: (e) => {
+                    setSrc(e.target.value);
+                    setSel(new Set());
+                    setRes(null);
+                  },
+                },
+                h("option", { value: "" }, origens.length ? "Escolha uma teoria" : "Nenhuma teoria escrita ainda"),
+                origens.map((m) => h("option", { key: m.id, value: m.id }, curto(m.nome || "Mapa mental"))),
+              ),
+            ),
+        doc
+          ? h(
+              "fieldset",
+              null,
+              h(
+                "legend",
+                { className: "small-label" },
+                "QUAIS CAPÍTULOS",
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    className: "text-link",
+                    onClick: () => setSel(sel.size === doc.caps.length ? new Set() : new Set(doc.caps.map(__teChave))),
+                  },
+                  sel.size === doc.caps.length ? "desmarcar todos" : "marcar todos",
+                ),
+              ),
+              doc.caps.map((c, i) => {
+                let k = __teChave(c);
+                return h(
+                  "label",
+                  { key: k, className: "te-cp-cap" },
+                  h("input", {
+                    type: "checkbox",
+                    checked: sel.has(k),
+                    onChange: () => {
+                      let s = new Set(sel);
+                      s.has(k) ? s.delete(k) : s.add(k);
+                      setSel(s);
+                      setRes(null);
+                    },
+                  }),
+                  h("span", null, h("b", null, i + 1, ". ", titulo(c)), h("small", null, c.bl.length === 1 ? "1 parágrafo" : `${c.bl.length} parágrafos`)),
+                );
+              }),
+            )
+          : null,
+        para
+          ? h("p", { className: "te-cp-para" }, h("span", { className: "small-label" }, "PARA O ASSUNTO"), para.a.t)
+          : h(
+              "label",
+              null,
+              h("span", { className: "small-label" }, "PARA QUAL ASSUNTO"),
+              h(
+                "select",
+                {
+                  value: dst,
+                  onChange: (e) => {
+                    setDst(e.target.value);
+                    setRes(null);
+                  },
+                },
+                h("option", { value: "" }, "Escolha o assunto"),
+                discs.map((d) => {
+                  let as = d.as.filter((a) => a.id !== map?.ci);
+                  return as.length
+                    ? h(
+                        "optgroup",
+                        { key: d.id, label: d.n },
+                        as.map((a) => {
+                          let n = __teStore.items[__ciMapaDe(a.id)?.id]?.caps?.length;
+                          return h("option", { key: a.id, value: "a:" + a.id }, curto(__edNome(a.t)) + (n ? ` (já tem ${n} cap.)` : ""));
+                        }),
+                      )
+                    : null;
+                }),
+                outros.length
+                  ? h(
+                      "optgroup",
+                      { label: "Mapas fora do edital" },
+                      outros.map((m) => h("option", { key: m.id, value: "m:" + m.id }, curto(m.nome || "Mapa mental"))),
+                    )
+                  : null,
+              ),
+            ),
+        h(
+          "p",
+          { className: "meta" },
+          "A teoria de origem fica como está. O texto vai igual, e por isso o áudio já gravado neste aparelho é aproveitado.",
+        ),
+        res?.erro ? h("p", { className: "understood-error", role: "alert" }, res.erro) : null,
+        h(
+          "div",
+          { className: "mm-btns" },
+          h(
+            "button",
+            { type: "button", className: "qd-btn pri", disabled: !doc || !sel.size || !alvo() || !__mpStore.loaded, onClick: copiar },
+            sel.size > 1 ? `Copiar ${sel.size} capítulos` : "Copiar capítulo",
+          ),
+          h("button", { type: "button", className: "qd-btn", onClick: onClose }, "Cancelar"),
+        ),
+      ),
+    );
+  }
+
   // --- documento de um mapa ---
   function __TEDoc({ map }) {
     let h = __rdR.createElement,
@@ -1024,6 +1261,7 @@
       comp = caps.reduce((n, c) => n + c.bl.filter((b) => b.k === "c").length, 0),
       livre = !!doc?.livre,
       [conf, setConf] = __rdR.useState(!1),
+      [copia, setCopia] = __rdR.useState(!1),
       falta = doc && !livre ? __teFalta(map, doc) : [],
       novos = falta.filter((b) => !caps.some((c) => c.rid === b.id)).length,
       stale = falta.length > 0,
@@ -1091,11 +1329,15 @@
                       : "Reescrever a teoria",
             ),
         h(__OVBtn, { tit: nome, pars: ouvir, className: "qd-btn" }, "Ouvir a teoria"),
+        caps.length
+          ? h("button", { type: "button", className: "qd-btn", disabled: !!busy, onClick: () => setCopia(!0) }, "Copiar capítulos para outro assunto")
+          : null,
       ),
+      copia ? h(__TECopia, { de: map.id, onClose: () => setCopia(!1) }) : null,
       doc && caps.length ? h(__TEChat, { map, doc, busy }) : null,
       busy ? h("div", { className: "qd-reading", role: "status" }, h("span", { className: "qd-spin" }), busy) : null,
       err ? h("p", { className: "understood-error", role: "alert" }, err) : null,
-      !lidos
+      !lidos && !caps.length
         ? h(
             "div",
             { className: "qd-empty" },
