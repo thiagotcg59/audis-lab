@@ -968,7 +968,7 @@
             : h(
                 "div",
                 { className: "mp-ramo-h" },
-                h("span", { className: "mm-branch" }, b.t),
+                h("span", { className: "mm-branch", id: "mp-r-" + b.id }, b.t),
                 ed
                   ? h(
                       "button",
@@ -995,7 +995,7 @@
                   )
                 : h(
                     "li",
-                    { key: x.id },
+                    { key: x.id, id: "mp-i-" + x.id },
                     x.m ? h("span", { className: "mm-mark" }, __mpMarks[x.m]) : null,
                     __mpParts(x.x).map((p, q) =>
                       p.g ? h("b", { key: q, className: "mm-ctx" }, p.g) : h(__rdR.Fragment, { key: q }, p.t),
@@ -1178,6 +1178,20 @@
       rerr = page ? __mpStore.rerr[page.id] : "",
       ps = page && __mpRead(page) ? __mpPageStats(page) : null,
       pend = __mpPend(map);
+    // leitura em voz alta dos ramos: a tela vai para a página que está sendo lida, e o treino pausa a leitura
+    __ovUse();
+    let ouvir = __ovDoMapa(map),
+      ouvirOp = { rot: "página", de: map.pags.length },
+      lendo = (__ovS.on && __ovS.pars[__ovS.fila[__ovS.i]?.p]?.pg) || "";
+    __rdR.useEffect(() => {
+      if (!lendo || !__ovS.play) return;
+      setPid(lendo);
+      setSide("ramos");
+      setView("pag");
+    }, [lendo]);
+    __rdR.useEffect(() => {
+      run && __ovS.play && __ovPausar();
+    }, [!!run]);
     return h(
       "main",
       { className: "page mp" },
@@ -1294,6 +1308,7 @@
             )
           : null,
         h(re, { className: "qd-btn", href: "/teoria?m=" + encodeURIComponent(map.id) }, "Teoria do assunto"),
+        h(__OVBtn, { tit: map.nome || "Mapa mental", pars: ouvir, disc: map.disc, op: ouvirOp, className: "qd-btn" }, "Ouvir o mapa"),
       ),
       err ? h("p", { className: "understood-error", role: "alert" }, err) : null,
       __mpStore.err ? h("p", { className: "understood-error", role: "alert" }, __mpStore.err) : null,
@@ -1403,6 +1418,13 @@
                         onClick: () => setRun({ ids: [page.id], only: !1 }),
                       },
                       "Treinar esta página",
+                    )
+                  : null,
+                map.pags.length > 1 && __mpRead(page)
+                  ? h(
+                      __OVBtn,
+                      { tit: map.nome || "Mapa mental", pars: ouvir, cap: pidx, disc: map.disc, op: ouvirOp, className: "qd-btn" },
+                      "Ouvir a partir desta página",
                     )
                   : null,
                 h(
@@ -1573,6 +1595,7 @@
               "Excluir este mapa",
             ),
       ),
+      h(__OVPlayer, null),
       lb && page
         ? h(__QDLight, {
             list: map.pags.map((p, i) => ({ ...p, title: "Página " + (i + 1) })),

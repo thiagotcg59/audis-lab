@@ -1,5 +1,5 @@
   // Ouvir (módulo 35): leitura em voz alta com a voz do próprio aparelho (speechSynthesis do navegador).
-  // Não usa IA, não usa a internet e não guarda nada no banco. Usado pela Teoria (módulo 31).
+  // Não usa IA e não usa a internet. Usado pela Teoria (módulo 31) e pelos ramos dos mapas (módulo 29, __ovDoMapa).
   // A fila é feita de frases curtas, porque alguns navegadores cortam falas longas; os parágrafos servem
   // para destacar o trecho na tela e para voltar/avançar. Pausar cancela a fala e guarda a posição
   // (o "pause" do navegador não funciona no Android).
@@ -268,7 +268,7 @@
         ),
         com ? null : h("p", { className: "meta" }, "Nenhum dia com áudio neste período."),
       ),
-      total ? null : h("p", { className: "meta" }, "O app conta o tempo com a leitura em voz alta da Teoria tocando."),
+      total ? null : h("p", { className: "meta" }, "O app conta o tempo com a leitura em voz alta da Teoria ou de um mapa tocando."),
     );
   }
   function __ovAp() {
@@ -427,6 +427,22 @@
       ];
     });
   }
+  // parágrafos de um mapa: o nome de cada ramo e as suas afirmações, página por página (cap = posição da página).
+  // Os ids são os dos elementos em __MPRamos; `pg` diz de que página é o trecho, para a tela acompanhar a leitura.
+  function __ovDoMapa(map) {
+    let varias = map.pags.length > 1;
+    return map.pags.flatMap((p, i) =>
+      __mpRead(p)
+        ? [
+            ...(varias ? [{ id: "", cap: i, pg: p.id, x: `Página ${i + 1}.` }] : []),
+            ...p.ramos.flatMap((b) => [
+              { id: "mp-r-" + b.id, cap: i, pg: p.id, x: b.t + "." },
+              ...b.itens.map((x) => ({ id: "mp-i-" + x.id, cap: i, pg: p.id, x: (x.m && __mpMarks[x.m] ? __mpMarks[x.m] + ". " : "") + x.x })),
+            ]),
+          ]
+        : [],
+    );
+  }
   // trechos para a ElevenLabs: o parágrafo inteiro (a entonação fica melhor), partido só se for muito longo
   function __ovPedacos(t) {
     let out = [""];
@@ -444,11 +460,14 @@
     S.auI = -1;
     S.i = Math.max(0, S.fila.findIndex((f) => f.p >= p));
   }
-  function __ovAbrir(tit, pars, cap, disc) {
+  // op: { rot: nome de cada parte no leitor ("capítulo" se faltar), de: quantas partes há ao todo }
+  function __ovAbrir(tit, pars, cap, disc, op) {
     let S = __ovS;
     S.pars = pars;
     S.tit = tit;
     S.disc = disc || "";
+    S.rot = op?.rot || "capítulo";
+    S.de = op?.de || 0;
     clearInterval(S.tIv);
     S.tIv = setInterval(__ovEmit, 5e3);
     S.on = !0;
@@ -693,12 +712,12 @@
     );
   }
   // botão que começa a leitura (cap: índice do capítulo; sem ele, do início)
-  function __OVBtn({ tit, pars, cap, disc, className, children }) {
+  function __OVBtn({ tit, pars, cap, disc, op, className, children }) {
     __ovUse();
     if (!__ovOk() || !pars.length) return null;
     return __rdR.createElement(
       "button",
-      { type: "button", className, onClick: () => __ovAbrir(tit, pars, cap || 0, disc) },
+      { type: "button", className, onClick: () => __ovAbrir(tit, pars, cap || 0, disc, op) },
       children,
     );
   }
@@ -717,7 +736,7 @@
     if (!S.on) return null;
     let cfg = __ovCfg(),
       vozes = __ovVozes(),
-      caps = new Set(S.pars.map((p) => p.cap)).size,
+      caps = S.de || new Set(S.pars.map((p) => p.cap)).size,
       feito = S.fim ? 1 : f && S.total ? f.a / S.total : 0,
       seg = f && !S.fim ? (S.total - f.a) / (15 * cfg.v) : 0,
       resta = S.fim ? "Fim da leitura." : seg < 50 ? "menos de 1 min" : `cerca de ${Math.round(seg / 60) || 1} min`,
@@ -733,7 +752,7 @@
           "span",
           { className: "ov-tit" },
           h("b", null, S.tit),
-          par && caps > 1 ? h("small", null, "capítulo ", par.cap + 1, " de ", caps) : null,
+          par && caps > 1 ? h("small", null, S.rot || "capítulo", " ", par.cap + 1, " de ", caps) : null,
         ),
         h(
           "button",
