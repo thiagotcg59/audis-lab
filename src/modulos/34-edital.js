@@ -27,6 +27,70 @@
       mudou: !!(caps && !doc.livre && __teFalta(m, doc).length),
     };
   }
+  // Assuntos que saíram do edital (`fora` no módulo 32) e em que o aluno tem alguma coisa: marca de estudado,
+  // blocos do Ciclo, mapa com páginas ou teoria escrita. Nada disso é apagado; a tela só avisa e dá o atalho.
+  // `para` é o assunto atual que cobre o mesmo conteúdo, quando existe.
+  function __edFora(ed, an) {
+    let tem = new Map();
+    for (let d of ed.discs) for (let a of d.as) tem.set(a.id, a);
+    return (__ciRef.fora || [])
+      .filter((f) => !tem.has(f.id))
+      .map((f) => {
+        let m = __ciMapaDe(f.id),
+          doc = m ? __teStore.items[m.id] : null;
+        return {
+          f,
+          m,
+          pags: m ? m.pags.length : 0,
+          caps: doc && Array.isArray(doc.caps) ? doc.caps.length : 0,
+          est: an.est[f.id] || "",
+          blocos: an.cont[f.id] || 0,
+          para: f.p ? tem.get(f.p) || null : null,
+        };
+      })
+      .filter((x) => x.pags || x.caps || x.est || x.blocos);
+  }
+  function __EDFora({ L }) {
+    let h = __rdR.createElement,
+      lk = (rota, m) => "/" + rota + "?m=" + encodeURIComponent(m.id);
+    return h(
+      "details",
+      { className: "ed-fora", open: !0 },
+      h(
+        "summary",
+        null,
+        h("b", null, L.length === 1 ? "1 assunto que você estudou saiu do edital" : `${L.length} assuntos que você estudou saíram do edital`),
+      ),
+      h("p", { className: "meta" }, "O edital foi atualizado. O que você tem nestes assuntos continua guardado, mas eles não contam mais no edital."),
+      h(
+        "ul",
+        null,
+        L.map((x) => {
+          let tem = [
+            x.est ? "marcado como estudado" : "",
+            x.caps ? `teoria com ${x.caps} ${x.caps === 1 ? "capítulo" : "capítulos"}` : "",
+            x.pags ? `mapa com ${x.pags} ${x.pags === 1 ? "página" : "páginas"}` : "",
+            x.blocos ? (x.blocos === 1 ? "1 bloco no Ciclo" : `${x.blocos} blocos no Ciclo`) : "",
+          ].filter(Boolean);
+          return h(
+            "li",
+            { key: x.f.id },
+            h("b", null, __edNome(x.f.t)),
+            h("span", { className: "meta" }, x.f.n, " · ", tem.join(" · ")),
+            h(
+              "span",
+              { className: "ed-fora-l" },
+              x.caps ? h(re, { className: "text-link", href: lk("teoria", x.m) }, "Abrir a teoria") : null,
+              x.pags ? h(re, { className: "text-link", href: lk("mapas", x.m) }, "Abrir o mapa") : null,
+              x.para
+                ? h(re, { className: "text-link", href: "/assunto?a=" + encodeURIComponent(x.para.id) }, "Hoje está em: ", __edNome(x.para.t))
+                : null,
+            ),
+          );
+        }),
+      ),
+    );
+  }
   function __EDQuadro({ a, info, blocos }) {
     let h = __rdR.createElement,
       nome = __edNome(a.t),
@@ -61,6 +125,7 @@
         return { d, i, itens, comT: itens.filter((x) => x.info.st === "t").length, est: itens.filter((x) => x.info.est).length };
       }),
       todos = discs.flatMap((x) => x.itens),
+      fora = __edFora(ed, an),
       nT = todos.filter((x) => x.info.st === "t").length,
       nM = todos.filter((x) => x.info.st === "m").length,
       nE = todos.filter((x) => x.info.est).length,
@@ -106,6 +171,7 @@
               num(nT, "com teoria escrita"),
               num(nM, "com mapa, sem teoria"),
             ),
+            fora.length ? h(__EDFora, { L: fora }) : null,
             h(
               "div",
               { className: "ed-barra" },
