@@ -17,13 +17,34 @@
       an = __ciAn(),
       d = ed.discs.find((x) => x.as.some((a) => a.id === aid)),
       a = d?.as.find((x) => x.id === aid);
-    if (!a)
+    if (!a) {
+      // assunto que saiu na atualização do edital: diz onde o conteúdo está hoje e dá o atalho para o que já existe
+      let f = (__ciRef.fora || []).find((x) => x.id === aid),
+        mf = f ? __ciMapaDe(f.id) : null,
+        para = f && f.p ? ed.discs.flatMap((x) => x.as).find((x) => x.id === f.p) : null;
       return h(
         "main",
         { className: "page mp as" },
         h(re, { className: "text-link mp-back", href: "/edital" }, "‹ Edital"),
-        h("div", { className: "page-intro" }, h("h1", null, "Assunto"), h("p", null, "Este assunto não está mais no edital.")),
+        h(
+          "div",
+          { className: "page-intro" },
+          h("h1", null, f ? __edNome(f.t) : "Assunto"),
+          h("p", null, f ? "Este assunto saiu do edital na atualização. O que você tem nele continua guardado." : "Este assunto não está mais no edital."),
+        ),
+        f
+          ? h(
+              "div",
+              { className: "mm-btns as-fora" },
+              mf && __teStore.items[mf.id]?.caps?.length
+                ? h(re, { className: "qd-btn", href: "/teoria?m=" + encodeURIComponent(mf.id) }, "Abrir a teoria")
+                : null,
+              mf ? h(re, { className: "qd-btn", href: "/mapas?m=" + encodeURIComponent(mf.id) }, "Abrir o mapa") : null,
+              para ? h(re, { className: "qd-btn pri", href: "/assunto?a=" + encodeURIComponent(para.id) }, "Hoje está em: ", __edNome(para.t)) : null,
+            )
+          : null,
       );
+    }
     let info = __edInfo(a, an),
       m = info.m,
       doc = m ? __teStore.items[m.id] : null,

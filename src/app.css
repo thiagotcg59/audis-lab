@@ -10394,3 +10394,48 @@ b.mm-gap.done.p {
 .ov-g > .meta {
   margin: 8px 0 0;
 }
+
+/* Edital: aviso dos assuntos que saíram na atualização do edital e em que o aluno já tinha alguma coisa */
+.ed-fora {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper, #fff);
+  font:
+    14px/1.45 Arial,
+    sans-serif;
+  color: var(--ink);
+}
+.ed-fora summary {
+  cursor: pointer;
+}
+.ed-fora > .meta {
+  margin: 8px 0 0;
+}
+.ed-fora ul {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ed-fora li {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ed-fora-l {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.as-fora .qd-btn {
+  max-width: 100%;
+  height: auto;
+  white-space: normal;
+  text-align: left;
+}

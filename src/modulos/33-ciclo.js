@@ -6,7 +6,8 @@
   //   edital     { nome, discs: [{ id, n, grupo, q, peso, b (blocos por volta), as: [{ id, t }] }] }
   //   andamento  { volta, done: { "<id da disciplina>#<nº>": 1 }, cont: { <id do assunto>: n },
   //                tot: { <id da disciplina>: n }, log: [{ d, k, a, s, v }],
-  //                est: { <id do assunto>: "AAAA-MM-DD" (dia em que foi marcado como estudado) } }
+  //                est: { <id do assunto>: "AAAA-MM-DD" (dia em que foi marcado como estudado) },
+  //                v (versão do edital para a qual o andamento já foi ajustado) }
   // Enquanto o aluno não mexe no edital, vale o de referência (__ciRef, módulo 32).
   var __ciStore = { ed: null, an: null, ready: !1, loaded: !1, listeners: new Set(), err: "" };
   var __ciLSK = "audis:ci",
@@ -88,15 +89,60 @@
       }
     });
   }
+  // Troca de edital (2022 › 2026, `v` 2 no módulo 32). Nada é gravado só por abrir o app: o edital e o andamento
+  // antigos são lidos já ajustados, e a forma nova é salva na primeira mudança que o aluno fizer.
+  // Disciplinas que entraram em outra: Estatística em Raciocínio Lógico, Administração Pública em Administração Geral.
+  var __ciJunta = { d4: "d3", d7: "d6" },
+    __ciMigMemo = new WeakMap();
+  // edital que o aluno tinha salvo: passa a ser o de referência novo, mantendo os blocos por volta que ele escolheu
+  // e as disciplinas e os assuntos que ele mesmo criou (ids que não são do edital de referência)
+  function __ciMigEd(ed) {
+    if ((ed.v | 0) >= __ciRef.v) return ed;
+    let m = __ciMigMemo.get(ed);
+    if (m) return m;
+    let { fora, ...ref } = JSON.parse(JSON.stringify(__ciRef)),
+      velho = new Map(ed.discs.map((d) => [d.id, d])),
+      novo = new Map(ref.discs.map((d) => [d.id, d]));
+    for (let d of ref.discs) {
+      let partes = [d.id, ...Object.keys(__ciJunta).filter((k) => __ciJunta[k] === d.id)].filter((k) => velho.has(k));
+      partes.length && (d.b = Math.min(12, partes.reduce((n, k) => n + (velho.get(k).b | 0), 0)));
+    }
+    for (let o of ed.discs) {
+      let alvo = novo.get(__ciJunta[o.id] || o.id),
+        meus = (o.as || []).filter((a) => !/^d\d+a\d+$/.test(a.id));
+      alvo ? alvo.as.push(...meus) : /^d\d+$/.test(o.id) ? meus.length && ref.discs.push({ ...o, as: meus }) : ref.discs.push(o);
+    }
+    __ciMigMemo.set(ed, ref);
+    return ref;
+  }
+  // andamento: os blocos das disciplinas que entraram em outra passam a contar na disciplina que ficou
+  function __ciMigAn(a) {
+    if ((a.v | 0) >= __ciRef.v) return a;
+    let tot = { ...a.tot },
+      done = {},
+      vaga = (s) => {
+        let [k, n] = String(s || "").split("#");
+        return __ciJunta[k] ? __ciJunta[k] + "#" + ((n | 0) + 2) : s;
+      };
+    for (let k in __ciJunta) tot[k] && ((tot[__ciJunta[k]] = (tot[__ciJunta[k]] || 0) + tot[k]), delete tot[k]);
+    for (let s in a.done || {}) done[vaga(s)] = 1;
+    return {
+      ...a,
+      tot,
+      done,
+      log: (a.log || []).map((l) => (__ciJunta[l.k] ? { ...l, k: __ciJunta[l.k], s: vaga(l.s) } : l)),
+      v: __ciRef.v,
+    };
+  }
   function __ciEd() {
-    return __ciStore.ed || __ciRef;
+    return __ciStore.ed ? __ciMigEd(__ciStore.ed) : __ciRef;
   }
   function __ciAn() {
-    let a = __ciStore.an || {};
-    return { volta: a.volta || 1, done: a.done || {}, cont: a.cont || {}, tot: a.tot || {}, log: a.log || [], est: a.est || {} };
+    let a = __ciMigAn(__ciStore.an || {});
+    return { volta: a.volta || 1, done: a.done || {}, cont: a.cont || {}, tot: a.tot || {}, log: a.log || [], est: a.est || {}, v: __ciRef.v };
   }
   function __ciSetEd(fn) {
-    let e = __ciEd();
+    let { fora, ...e } = __ciEd();
     return __ciSave("edital", fn({ ...e, discs: e.discs.map((d) => ({ ...d, as: [...d.as] })) }));
   }
   function __ciId(p) {
@@ -130,7 +176,7 @@
       tot = { ...an.tot, [discId]: (an.tot[discId] || 0) + 1 },
       log = [...an.log, { d: __qdNow(), k: discId, a: assId || "", s, v: an.volta }].slice(-400),
       fechou = fila.length > 0 && fila.every((x) => done[x.key]);
-    __ciSave("andamento", { volta: fechou ? an.volta + 1 : an.volta, done: fechou ? {} : done, cont, tot, log, est: an.est });
+    __ciSave("andamento", { volta: fechou ? an.volta + 1 : an.volta, done: fechou ? {} : done, cont, tot, log, est: an.est, v: an.v });
     return fechou;
   }
   // marca (ou desmarca) um assunto como estudado: `est` guarda o dia em que foi marcado
@@ -737,7 +783,7 @@
                       type: "button",
                       className: "qd-btn danger",
                       onClick: () => {
-                        __ciSave("edital", JSON.parse(JSON.stringify(__ciRef)));
+                        __ciSave("edital", JSON.parse(JSON.stringify({ ...__ciRef, fora: void 0 })));
                         setConfRef(!1);
                       },
                     },
